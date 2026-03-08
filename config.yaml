@@ -1,173 +1,176 @@
 # ============================================
-# CyberStrikeAI 配置文件
+# CyberStrikeAI 설정 파일
 # ============================================
-# 本配置文件支持通过 Web 界面进行可视化配置
-# 点击右上角"设置"按钮即可修改配置
-# ============================================
-
-# ============================================
-# 系统设置
+# 이 설정 파일은 웹 인터페이스에서 시각적으로 수정할 수 있습니다
+# 우측 상단 "설정" 버튼을 클릭하여 변경하세요
 # ============================================
 
-# 前端显示的版本号（可选，不填则显示默认版本）
+# ============================================
+# 시스템 설정
+# ============================================
+
+# 프론트엔드에 표시할 버전 번호 (선택, 비워두면 기본 버전 표시)
 version: "v1.3.19"
 
-# 服务器配置
+# UI 언어 설정: cn (중국어) | ko (한국어)
+language: "ko"
+
+# 서버 설정
 server:
-  host: 0.0.0.0 # 监听地址，0.0.0.0 表示监听所有网络接口
-  port: 8080     # HTTP 服务端口，可通过浏览器访问 http://localhost:8080
+  host: 0.0.0.0 # 수신 주소, 0.0.0.0은 모든 네트워크 인터페이스에서 수신
+  port: 8080     # HTTP 서비스 포트, 브라우저에서 http://localhost:8080 으로 접속
 
-# 认证配置
+# 인증 설정
 auth:
-  password:  # Web 登录密码，请修改为强密码
-  session_duration_hours: 12          # 登录有效期（小时），超时后需重新登录
+  password: OUKK_dByUKWPkdhgu9ZeQfWk # 웹 로그인 비밀번호, 강력한 비밀번호로 변경하세요
+  session_duration_hours: 12          # 로그인 유효 시간 (시간 단위), 만료 후 재로그인 필요
 
-# 日志配置
+# 로그 설정
 log:
-  level: info   # 日志级别: debug(调试), info(信息), warn(警告), error(错误)
-  output: stdout # 日志输出位置: stdout(标准输出), stderr(标准错误), 或文件路径
+  level: info   # 로그 수준: debug(디버그), info(정보), warn(경고), error(오류)
+  output: stdout # 로그 출력 위치: stdout(표준 출력), stderr(표준 오류), 또는 파일 경로
 
 # ============================================
-# 对话相关配置
+# 대화 관련 설정
 # ============================================
 
-# AI 模型配置（支持 OpenAI 兼容 API）
-# 必填项：api_key, base_url, model 必须填写才能正常运行
-# 支持的 API 服务商：
+# AI 모델 설정 (OpenAI 호환 API 지원)
+# 필수 항목: api_key, base_url, model 을 반드시 입력해야 정상 작동합니다
+# 지원 API 서비스:
 #   - OpenAI: https://api.openai.com/v1
 #   - DeepSeek: https://api.deepseek.com/v1
-#   - 其他兼容 OpenAI 协议的 API
-# 常用模型: gpt-4, gpt-3.5-turbo, deepseek-chat, claude-3-opus 等
+#   - 기타 OpenAI 프로토콜 호환 API
+# 주요 모델: gpt-4, gpt-3.5-turbo, deepseek-chat, claude-3-opus 등
 openai:
-  base_url: https://api.deepseek.com/v1 # API 基础 URL（必填）
-  api_key: sk-xxxx                       # API 密钥（必填）
-  model: deepseek-chat                   # 模型名称（必填）
-  max_total_tokens: 120000              # LLM 相关上下文的最大 Token 数限制（内存压缩和攻击链构建会共用此配置）
+  base_url: https://api.deepseek.com/v1 # API 기본 URL (필수)
+  api_key: sk-xxxx                       # API 키 (필수)
+  model: deepseek-chat                   # 모델 이름 (필수)
+  max_total_tokens: 120000              # LLM 관련 컨텍스트 최대 토큰 수 (메모리 압축 및 공격 체인 구성에 공유 사용)
 
 # ============================================
-# 信息收集（FOFA）配置（可选）
+# 정보 수집 (FOFA) 설정 (선택)
 # ============================================
-# 用于「信息收集」页面调用 FOFA API（后端代理，避免前端暴露 key）
-# 也可通过环境变量配置：FOFA_EMAIL / FOFA_API_KEY（优先级更高）
+# 「정보 수집」 페이지에서 FOFA API 호출에 사용 (백엔드 프록시로 프론트엔드 key 노출 방지)
+# 환경 변수로도 설정 가능: FOFA_EMAIL / FOFA_API_KEY (우선순위 높음)
 fofa:
-  base_url: "https://fofa.info/api/v1/search/all" # 可选，留空则使用默认
-  email: ""   # FOFA 账号邮箱（可选，建议在系统设置中填写）
-  api_key: "" # FOFA API Key（可选，建议在系统设置中填写）
+  base_url: "https://fofa.info/api/v1/search/all" # 선택, 비워두면 기본값 사용
+  email: ""   # FOFA 계정 이메일 (선택, 시스템 설정에서 입력 권장)
+  api_key: "" # FOFA API Key (선택, 시스템 설정에서 입력 권장)
 
-# Agent 配置
-# 达到最大迭代次数时，AI 会自动总结测试结果
+# Agent 설정
+# 최대 반복 횟수에 도달하면 AI가 테스트 결과를 자동으로 요약합니다
 agent:
-  max_iterations: 120           # 最大迭代次数，AI 代理最多执行多少轮工具调用
-  large_result_threshold: 102400 # 大结果阈值（字节），默认50KB，超过此大小会自动保存到存储
-  result_storage_dir: tmp        # 结果存储目录，大结果会保存在此目录下
+  max_iterations: 120           # 최대 반복 횟수, AI 에이전트가 최대 몇 번의 도구 호출을 수행할지
+  large_result_threshold: 102400 # 대용량 결과 임계값 (바이트), 기본 100KB, 초과 시 스토리지에 자동 저장
+  result_storage_dir: tmp        # 결과 저장 디렉토리, 대용량 결과가 이 디렉토리에 저장됨
 
-# 数据库配置
+# 데이터베이스 설정
 database:
-  path: data/conversations.db    # SQLite 数据库文件路径，用于存储对话历史和消息
-  knowledge_db_path: data/knowledge.db # 知识库数据库文件路径（可选，为空则使用会话数据库），用于存储知识库项和向量嵌入，可独立复制和复用
+  path: data/conversations.db    # SQLite 데이터베이스 파일 경로, 대화 기록 및 메시지 저장용
+  knowledge_db_path: data/knowledge.db # 지식 베이스 데이터베이스 파일 경로 (선택, 비워두면 세션 데이터베이스 사용), 지식 항목 및 벡터 임베딩 저장, 독립적으로 복사 및 재사용 가능
 
 # ============================================
-# 任务管理相关配置
+# 작업 관리 관련 설정
 # ============================================
-# （配置项已包含在对话相关配置中）
+# (설정 항목은 대화 관련 설정에 포함됨)
 
 # ============================================
-# 漏洞管理相关配置
+# 취약점 관리 관련 설정
 # ============================================
 
-# 安全工具配置
-# 系统会从该目录加载所有 .yaml 格式的工具配置文件
-# 推荐方式：在 tools/ 目录下为每个工具创建独立的配置文件
+# 보안 도구 설정
+# 시스템은 해당 디렉토리에서 모든 .yaml 형식의 도구 설정 파일을 로드합니다
+# 권장 방식: tools/ 디렉토리 아래 각 도구별로 독립적인 설정 파일 생성
 security:
-  tools_dir: tools # 工具配置文件目录（相对于配置文件所在目录）
-  # 工具描述模式：加载 tools 下工具时，暴露给 AI/API 使用的描述来源
-  #   short - 优先使用 short_description（简短描述，省 token），为空时用 description
-  #   full  - 使用 description（详细描述）
+  tools_dir: tools # 도구 설정 파일 디렉토리 (설정 파일 위치 기준 상대 경로)
+  # 도구 설명 모드: tools 아래 도구 로드 시 AI/API에 노출할 설명 출처
+  #   short - short_description 우선 사용 (간략한 설명, 토큰 절약), 비어 있으면 description 사용
+  #   full  - description 사용 (상세 설명)
   tool_description_mode: full
 
 # ============================================
-# MCP 相关配置
+# MCP 관련 설정
 # ============================================
 
-# MCP 协议配置
-# MCP (Model Context Protocol) 用于工具注册和调用
+# MCP 프로토콜 설정
+# MCP (Model Context Protocol)는 도구 등록 및 호출에 사용됩니다
 mcp:
-  enabled: false # 是否启用 MCP 服务器（http模式）
-  host: 0.0.0.0  # MCP 服务器监听地址
-  port: 8081     # MCP 服务器端口
+  enabled: false # MCP 서버 활성화 여부 (http 모드)
+  host: 0.0.0.0  # MCP 서버 수신 주소
+  port: 8081     # MCP 서버 포트
 
-# 外部 MCP 配置
+# 외부 MCP 설정
 external_mcp:
   servers: {}
 
 # ============================================
-# 知识库相关配置
+# 지식 베이스 관련 설정
 # ============================================
 
 knowledge:
-  enabled: false                    # 是否启用知识检索功能
-  base_path: knowledge_base         # 知识库目录路径（相对于配置文件所在目录）
+  enabled: false                    # 지식 검색 기능 활성화 여부
+  base_path: knowledge_base         # 지식 베이스 디렉토리 경로 (설정 파일 위치 기준 상대 경로)
   embedding:
-    provider: openai                # 嵌入模型提供商（目前仅支持openai）
-    model: text-embedding-v4        # 嵌入模型名称
-    base_url: https://api.deepseek.com/v1 # 留空则使用OpenAI配置的base_url
-    api_key: sk-xxxxxx              # 留空则使用OpenAI配置的api_key
+    provider: openai                # 임베딩 모델 제공자 (현재 openai만 지원)
+    model: text-embedding-v4        # 임베딩 모델 이름
+    base_url: https://api.deepseek.com/v1 # 비워두면 OpenAI 설정의 base_url 사용
+    api_key: sk-xxxxxx              # 비워두면 OpenAI 설정의 api_key 사용
   retrieval:
-    top_k: 5                        # 检索返回的Top-K结果数量
-    similarity_threshold: 0.7       # 相似度阈值（0-1），低于此值的结果将被过滤
-    hybrid_weight: 0.7              # 混合检索权重（0-1），向量检索的权重，1.0表示纯向量检索，0.0表示纯关键词检索
+    top_k: 5                        # 검색 결과 Top-K 반환 수
+    similarity_threshold: 0.7       # 유사도 임계값 (0-1), 이 값 미만의 결과는 필터링
+    hybrid_weight: 0.7              # 혼합 검색 가중치 (0-1), 벡터 검색 가중치. 1.0=순수 벡터 검색, 0.0=순수 키워드 검색
   # ============================================
-  # 索引配置（用于解决 API 限制问题）
+  # 인덱싱 설정 (API 제한 문제 해결용)
   # ============================================
   indexing:
-    # 分块配置
-    chunk_size: 512 # 每个块的最大 token 数（默认 512），长文本会被分割成多个块
-    chunk_overlap: 50 # 块之间的重叠 token 数（默认 50），保持上下文连贯性
-    max_chunks_per_item: 0 # 单个知识项的最大块数量（0 表示不限制），防止单个文件消耗过多 API 配额
-    # 速率限制配置（解决 429 错误）
-    max_rpm: 0 # 每分钟最大请求数（默认 0 表示不限制），如 OpenAI 默认 200 RPM
-    rate_limit_delay_ms: 300 # 请求间隔毫秒数（默认 300），用于避免 API 速率限制，设为 0 不限制
-    # 建议值：200 次/分钟≈300ms, 100 次/分钟≈600ms
+    # 청크 설정
+    chunk_size: 512 # 청크당 최대 토큰 수 (기본 512), 긴 텍스트는 여러 청크로 분할
+    chunk_overlap: 50 # 청크 간 겹치는 토큰 수 (기본 50), 컨텍스트 연속성 유지
+    max_chunks_per_item: 0 # 지식 항목당 최대 청크 수 (0=제한 없음), 단일 파일의 과도한 API 할당량 소비 방지
+    # 속도 제한 설정 (429 오류 해결)
+    max_rpm: 0 # 분당 최대 요청 수 (기본 0=제한 없음), 예: OpenAI 기본 200 RPM
+    rate_limit_delay_ms: 300 # 요청 간격 밀리초 (기본 300), API 속도 제한 방지용. 0=제한 없음
+    # 권장값: 200회/분≈300ms, 100회/분≈600ms
 
-    # 重试配置
-    max_retries: 3 # 最大重试次数（默认 3），遇到速率限制或服务器错误时自动重试
-    retry_delay_ms: 1000 # 重试间隔毫秒数（默认 1000），每次重试会递增延迟
+    # 재시도 설정
+    max_retries: 3 # 최대 재시도 횟수 (기본 3), 속도 제한 또는 서버 오류 시 자동 재시도
+    retry_delay_ms: 1000 # 재시도 간격 밀리초 (기본 1000), 재시도마다 지연 시간 증가
 
 # ============================================
-# 机器人配置（企业微信、钉钉、飞书）
+# 봇 설정 (WeCom, DingTalk, Lark)
 # ============================================
-# 用于在手机端通过企业微信/钉钉/飞书与 CyberStrikeAI 对话，无需部署在服务器上也可使用
-# 在系统设置 -> 机器人设置 中可配置
+# 스마트폰에서 WeCom/DingTalk/Lark를 통해 CyberStrikeAI와 대화 가능, 서버 배포 불필요
+# 시스템 설정 → 봇 설정 에서 구성 가능
 robots:
-  wecom: # 企业微信
+  wecom: # 기업 WeChat (WeCom)
     enabled: false
     token: ""
     encoding_aes_key: ""
     corp_id: ""
     secret: ""
     agent_id: 0
-  dingtalk: # 钉钉
+  dingtalk: # DingTalk
     enabled: false
-    client_id: 
-    client_secret: 
-  lark: # 飞书
+    client_id:
+    client_secret:
+  lark: # Lark (Feishu)
     enabled: false
     app_id: ""
     app_secret: ""
     verify_token: ""
 
 # ============================================
-# Skills 相关配置
+# Skills 관련 설정
 # ============================================
 
-# 系统会从该目录加载所有skills，每个skill应是一个目录，包含SKILL.md文件
-# 例如：skills/sql-injection-testing/SKILL.md
-skills_dir: skills # Skills配置文件目录（相对于配置文件所在目录）
+# 시스템은 해당 디렉토리에서 모든 스킬을 로드합니다. 각 스킬은 SKILL.md 파일을 포함하는 디렉토리여야 합니다
+# 예시: skills/sql-injection-testing/SKILL.md
+skills_dir: skills # Skills 설정 파일 디렉토리 (설정 파일 위치 기준 상대 경로)
 
 # ============================================
-# 角色相关配置
+# 역할 관련 설정
 # ============================================
 
-# 系统会从该目录加载所有 .yaml 格式的角色配置文件
-# 每个角色应创建独立的配置文件，例如：roles/CTF.yaml, roles/默认.yaml 等
-roles_dir: roles # 角色配置文件目录（相对于配置文件所在目录）
+# 시스템은 해당 디렉토리에서 모든 .yaml 형식의 역할 설정 파일을 로드합니다
+# 각 역할은 독립적인 설정 파일로 생성 권장, 예: roles/CTF.yaml, roles/기본.yaml 등
+roles_dir: roles # 역할 설정 파일 디렉토리 (설정 파일 위치 기준 상대 경로)

@@ -26,7 +26,7 @@
         return terminals[0] || null;
     }
 
-    var WELCOME_LINE = 'CyberStrikeAI 终端 - 真实 Shell 会话，直接输入命令；Ctrl+L 清屏\r\n';
+    var WELCOME_LINE = t('terminal.welcome');
 
     function writePrompt(tab) {
         // 提示符交由后端 Shell 自行输出，这里仅保留占位函数，避免旧代码报错
@@ -121,19 +121,19 @@
             ws.onclose = function () {
                 tab.running = false;
                 if (tab.term) {
-                    tab.term.writeln('\r\n\x1b[2m[会话已关闭]\x1b[0m');
+                    tab.term.writeln('\r\n\x1b[2m' + t('terminal.session_closed') + '\x1b[0m');
                 }
             };
 
             ws.onerror = function () {
                 tab.running = false;
                 if (tab.term) {
-                    tab.term.writeln('\r\n\x1b[31m[终端连接出错]\x1b[0m');
+                    tab.term.writeln('\r\n\x1b[31m' + t('terminal.connect_error') + '\x1b[0m');
                 }
             };
         } catch (e) {
             if (tab.term) {
-                tab.term.writeln('\r\n\x1b[31m[无法连接终端服务: ' + String(e) + ']\x1b[0m');
+                tab.term.writeln('\r\n\x1b[31m' + t('terminal.connect_failed') + ' ' + String(e) + ']\x1b[0m');
             }
         }
     }
@@ -188,7 +188,7 @@
             if (term) term.focus();
         });
         container.setAttribute('tabindex', '0');
-        container.title = '点击此处后输入命令';
+        container.title = t('terminal.hint');
 
         function sendToWS(data) {
             ensureTerminalWS(tab);
@@ -253,12 +253,12 @@
         tabDiv.setAttribute('data-tab-id', String(id));
         var label = document.createElement('span');
         label.className = 'terminal-tab-label';
-        label.textContent = '终端 ' + id;
+        label.textContent = t('terminal.tab_label').replace('{0}', id);
         label.onclick = function () { switchTerminalTab(id); };
         var closeBtn = document.createElement('button');
         closeBtn.type = 'button';
         closeBtn.className = 'terminal-tab-close';
-        closeBtn.title = '关闭';
+        closeBtn.title = t('ui.btn.close_tab');
         closeBtn.textContent = '×';
         closeBtn.onclick = function (e) { e.stopPropagation(); removeTerminalTab(id); };
         tabDiv.appendChild(label);
@@ -340,7 +340,7 @@
                 var t = terminals[i];
                 tabDivs[i].setAttribute('data-tab-id', String(t.id));
                 var lbl = tabDivs[i].querySelector('.terminal-tab-label');
-                if (lbl) lbl.textContent = '终端 ' + t.id;
+                if (lbl) lbl.textContent = t('terminal.tab_label').replace('{0}', t.id);
                 if (lbl) lbl.onclick = (function (tid) { return function () { switchTerminalTab(tid); }; })(t.id);
                 var cb = tabDivs[i].querySelector('.terminal-tab-close');
                 if (cb) cb.onclick = (function (tid) { return function (e) { e.stopPropagation(); removeTerminalTab(tid); }; })(t.id);
@@ -377,7 +377,10 @@
         inited = true;
 
         if (typeof Terminal === 'undefined') {
-            container1.innerHTML = '<p class="terminal-error">未加载 xterm.js，请刷新页面或检查网络。</p>';
+            const errP = document.createElement('p');
+            errP.className = 'terminal-error';
+            errP.textContent = t('terminal.load_error');
+            container1.appendChild(errP);
             return;
         }
 

@@ -17,7 +17,7 @@ async function refreshDashboard() {
     setEl('dashboard-kpi-tools-calls', '…');
     setEl('dashboard-kpi-success-rate', '…');
     var chartPlaceholder = document.getElementById('dashboard-tools-pie-placeholder');
-    if (chartPlaceholder) { chartPlaceholder.style.removeProperty('display'); chartPlaceholder.textContent = '加载中…'; }
+    if (chartPlaceholder) { chartPlaceholder.style.removeProperty('display'); chartPlaceholder.textContent = t('dashboard.loading'); }
     var barChartEl = document.getElementById('dashboard-tools-bar-chart');
     if (barChartEl) { barChartEl.style.display = 'none'; barChartEl.innerHTML = ''; }
 
@@ -77,7 +77,7 @@ async function refreshDashboard() {
             setEl('dashboard-batch-pending', String(pending));
             setEl('dashboard-batch-running', String(running));
             setEl('dashboard-batch-done', String(done));
-            setEl('dashboard-batch-total', total > 0 ? `共 ${total} 个` : '暂无任务');
+            setEl('dashboard-batch-total', total > 0 ? `共 ${total} 个` : t('ui.empty.no_data'));
             
             // 更新进度条
             if (total > 0) {
@@ -120,7 +120,7 @@ async function refreshDashboard() {
             setEl('dashboard-kpi-tools-calls', String(totalCalls));
             var rateStr = totalCalls > 0 ? ((totalSuccess / totalCalls) * 100).toFixed(1) + '%' : '-';
             setEl('dashboard-kpi-success-rate', rateStr);
-            setEl('dashboard-tools-success-rate', rateStr !== '-' ? `成功率 ${rateStr}` : '-');
+            setEl('dashboard-tools-success-rate', rateStr !== '-' ? `${rateStr}` : '-');
             renderDashboardToolsBar(monitorRes);
         } else {
             setEl('dashboard-tools-count', '-');
@@ -138,7 +138,7 @@ async function refreshDashboard() {
         if (knowledgeRes && typeof knowledgeRes === 'object') {
             if (knowledgeRes.enabled === false) {
                 // 功能未启用：用状态标签展示，数值保持为 "-"
-                if (knowledgeStatusEl) knowledgeStatusEl.textContent = '未启用';
+                if (knowledgeStatusEl) knowledgeStatusEl.textContent = t('dashboard.status.not_enabled');
                 if (knowledgeItemsEl) knowledgeItemsEl.textContent = '-';
                 if (knowledgeCategoriesEl) knowledgeCategoriesEl.textContent = '-';
             } else {
@@ -149,9 +149,9 @@ async function refreshDashboard() {
                 // 根据数据量给个轻量状态文案
                 if (knowledgeStatusEl) {
                     if (items > 0 || categories > 0) {
-                        knowledgeStatusEl.textContent = '已启用';
+                        knowledgeStatusEl.textContent = t('dashboard.status.enabled');
                     } else {
-                        knowledgeStatusEl.textContent = '待配置';
+                        knowledgeStatusEl.textContent = t('dashboard.status.pending');
                     }
                 }
             }
@@ -172,15 +172,15 @@ async function refreshDashboard() {
             const statusEl = document.getElementById('dashboard-skills-status');
             if (statusEl) {
                 if (totalCalls === 0) {
-                    statusEl.textContent = '待使用';
+                    statusEl.textContent = t('dashboard.tool.pending');
                     statusEl.style.background = 'rgba(0, 0, 0, 0.05)';
                     statusEl.style.color = 'var(--text-secondary)';
                 } else if (totalCalls < 10) {
-                    statusEl.textContent = '活跃';
+                    statusEl.textContent = t('dashboard.tool.active');
                     statusEl.style.background = 'rgba(16, 185, 129, 0.1)';
                     statusEl.style.color = '#10b981';
                 } else {
-                    statusEl.textContent = '高频';
+                    statusEl.textContent = t('dashboard.tool.frequent');
                     statusEl.style.background = 'rgba(59, 130, 246, 0.1)';
                     statusEl.style.color = '#3b82f6';
                 }
@@ -200,7 +200,7 @@ async function refreshDashboard() {
         setEl('dashboard-kpi-tools-calls', '-');
         renderDashboardToolsBar(null);
         var ph = document.getElementById('dashboard-tools-pie-placeholder');
-        if (ph) { ph.style.removeProperty('display'); ph.textContent = '暂无调用数据'; }
+        if (ph) { ph.style.removeProperty('display'); ph.textContent = t('dashboard.no_call_data'); }
     }
 }
 
@@ -257,7 +257,7 @@ function renderDashboardToolsBar(monitorRes) {
 
     if (!monitorRes || typeof monitorRes !== 'object') {
         placeholder.style.removeProperty('display');
-        placeholder.textContent = '暂无调用数据';
+        placeholder.textContent = t('dashboard.no_call_data');
         barChartEl.style.display = 'none';
         barChartEl.innerHTML = '';
         return;
@@ -273,7 +273,7 @@ function renderDashboardToolsBar(monitorRes) {
 
     if (entries.length === 0) {
         placeholder.style.removeProperty('display');
-        placeholder.textContent = '暂无调用数据';
+        placeholder.textContent = t('dashboard.no_call_data');
         barChartEl.style.display = 'none';
         barChartEl.innerHTML = '';
         return;

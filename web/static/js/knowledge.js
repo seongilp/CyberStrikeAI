@@ -38,8 +38,8 @@ async function loadKnowledgeCategories() {
                 container.innerHTML = `
                     <div class="empty-state" style="text-align: center; padding: 40px 20px;">
                         <div style="font-size: 48px; margin-bottom: 20px;">📚</div>
-                        <h3 style="margin-bottom: 10px; color: #666;">知识库功能未启用</h3>
-                        <p style="color: #999; margin-bottom: 20px;">${data.message || '请前往系统设置启用知识检索功能'}</p>
+                        <h3 style="margin-bottom: 10px; color: #666;">${t('knowledge.disabled')}</h3>
+                        <p style="color: #999; margin-bottom: 20px;">${data.message || t('knowledge.goto_settings')}</p>
                         <button onclick="switchToSettings()" style="
                             background: #007bff;
                             color: white;
@@ -48,19 +48,19 @@ async function loadKnowledgeCategories() {
                             border-radius: 5px;
                             cursor: pointer;
                             font-size: 14px;
-                        ">前往设置</button>
+                        ">${t('knowledge.goto_settings')}</button>
                     </div>
                 `;
             }
             return [];
         }
-        
+
         knowledgeCategories = data.categories || [];
         
         // 更新分类筛选下拉框
         const filterDropdown = document.getElementById('knowledge-category-filter-dropdown');
         if (filterDropdown) {
-            filterDropdown.innerHTML = '<div class="custom-select-option" data-value="" onclick="selectKnowledgeCategory(\'\')">全部</div>';
+            filterDropdown.innerHTML = '<div class="custom-select-option" data-value="" onclick="selectKnowledgeCategory(\'\')">'+t('knowledge.filter.all')+'</div>';
             knowledgeCategories.forEach(category => {
                 const option = document.createElement('div');
                 option.className = 'custom-select-option';
@@ -122,8 +122,8 @@ async function loadKnowledgeItems(category = '', page = 1, pageSize = 10) {
                 container.innerHTML = `
                     <div class="empty-state" style="text-align: center; padding: 40px 20px;">
                         <div style="font-size: 48px; margin-bottom: 20px;">📚</div>
-                        <h3 style="margin-bottom: 10px; color: #666;">知识库功能未启用</h3>
-                        <p style="color: #999; margin-bottom: 20px;">${data.message || '请前往系统设置启用知识检索功能'}</p>
+                        <h3 style="margin-bottom: 10px; color: #666;">${t('knowledge.disabled')}</h3>
+                        <p style="color: #999; margin-bottom: 20px;">${data.message || t('knowledge.goto_settings')}</p>
                         <button onclick="switchToSettings()" style="
                             background: #007bff;
                             color: white;
@@ -132,7 +132,7 @@ async function loadKnowledgeItems(category = '', page = 1, pageSize = 10) {
                             border-radius: 5px;
                             cursor: pointer;
                             font-size: 14px;
-                        ">前往设置</button>
+                        ">${t('knowledge.goto_settings')}</button>
                     </div>
                 `;
             }
@@ -174,7 +174,7 @@ function renderKnowledgeItemsByCategories(categoriesWithItems) {
     if (!container) return;
     
     if (categoriesWithItems.length === 0) {
-        container.innerHTML = '<div class="empty-state">暂无知识项</div>';
+        container.innerHTML = '<div class="empty-state">' + t('knowledge.empty') + '</div>';
         return;
     }
     
@@ -218,7 +218,7 @@ function renderKnowledgeItems(items) {
     if (!container) return;
     
     if (items.length === 0) {
-        container.innerHTML = '<div class="empty-state">暂无知识项</div>';
+        container.innerHTML = '<div class="empty-state">' + t('knowledge.empty') + '</div>';
         return;
     }
     
@@ -281,7 +281,7 @@ function renderKnowledgePagination() {
     html += `<button class="pagination-btn" onclick="loadKnowledgePage(${currentPage - 1})" ${currentPage <= 1 ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>上一页</button>`;
     
     // 页码显示（显示分类数）
-    html += `<span style="padding: 0 12px;">第 ${currentPage} 页，共 ${totalPages} 页（共 ${total} 个分类）</span>`;
+    html += `<span style="padding: 0 12px;">${t('knowledge.pagination.info').replace('{0}', currentPage).replace('{1}', totalPages).replace('{2}', total)}</span>`;
     
     // 下一页按钮
     html += `<button class="pagination-btn" onclick="loadKnowledgePage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled style="opacity: 0.5; cursor: not-allowed;"' : ''}>下一页</button>`;
@@ -403,15 +403,15 @@ function updateKnowledgeStats(data, categoryCount) {
     
     statsContainer.innerHTML = `
         <div class="knowledge-stat-item">
-            <span class="knowledge-stat-label">总分类数</span>
+            <span class="knowledge-stat-label">${t('knowledge.stats.categories')}</span>
             <span class="knowledge-stat-value">${totalCategories}</span>
         </div>
         <div class="knowledge-stat-item">
-            <span class="knowledge-stat-label">当前页分类</span>
+            <span class="knowledge-stat-label">${t('knowledge.stats.current_cats')}</span>
             <span class="knowledge-stat-value">${categoryCount} 个</span>
         </div>
         <div class="knowledge-stat-item">
-            <span class="knowledge-stat-label">当前页知识项</span>
+            <span class="knowledge-stat-label">${t('knowledge.stats.current_items')}</span>
             <span class="knowledge-stat-value">${currentPageItemCount} 项</span>
         </div>
     `;
@@ -487,7 +487,7 @@ async function updateIndexProgress() {
                 ">
                     <div style="display: flex; align-items: center; margin-bottom: 8px;">
                         <span style="font-size: 20px; margin-right: 8px;">❌</span>
-                        <span style="font-weight: bold; color: #c00;">索引构建失败</span>
+                        <span style="font-weight: bold; color: #c00;">${t('knowledge.index.failed')}</span>
                     </div>
                     <div style="color: #666; font-size: 14px; margin-bottom: 12px; line-height: 1.5;">
                         ${escapeHtml(lastError)}
@@ -523,7 +523,7 @@ async function updateIndexProgress() {
                 indexProgressInterval = null;
             }
             // 显示错误通知
-            showNotification('索引构建失败: ' + lastError.substring(0, 100), 'error');
+            showNotification(t('knowledge.index.failed') + ': ' + lastError.substring(0, 100), 'error');
             return;
         }
         
@@ -547,7 +547,7 @@ async function updateIndexProgress() {
                 <div class="knowledge-index-progress">
                     <div class="progress-header">
                         <span class="progress-icon">🔨</span>
-                        <span class="progress-text">正在重建索引：${rebuildCurrent}/${rebuildTotal} (${rebuildProgress.toFixed(1)}%) - 失败：${rebuildFailed}</span>
+                        <span class="progress-text">${t('knowledge.index.building')}：${rebuildCurrent}/${rebuildTotal} (${rebuildProgress.toFixed(1)}%) - 失败：${rebuildFailed}</span>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar" style="width: ${rebuildProgress}%"></div>
@@ -570,7 +570,7 @@ async function updateIndexProgress() {
             progressContainer.innerHTML = `
                 <div class="knowledge-index-progress-complete">
                     <span class="progress-icon">✅</span>
-                    <span class="progress-text">索引构建完成 (${indexedItems}/${totalItems})</span>
+                    <span class="progress-text">${t('knowledge.index.complete')} (${indexedItems}/${totalItems})</span>
                 </div>
             `;
             // 完成后停止轮询
@@ -583,7 +583,7 @@ async function updateIndexProgress() {
                 <div class="knowledge-index-progress">
                     <div class="progress-header">
                         <span class="progress-icon">🔨</span>
-                        <span class="progress-text">正在构建索引: ${indexedItems}/${totalItems} (${progressPercent.toFixed(1)}%)</span>
+                        <span class="progress-text">${t('knowledge.index.progress').replace('{0}', `${indexedItems}/${totalItems} (${progressPercent.toFixed(1)}%)`)}</span>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar" style="width: ${progressPercent}%"></div>
@@ -613,7 +613,7 @@ async function updateIndexProgress() {
                 ">
                     <div style="display: flex; align-items: center; margin-bottom: 8px;">
                         <span style="font-size: 20px; margin-right: 8px;">⚠️</span>
-                        <span style="font-weight: bold; color: #c00;">无法获取索引状态</span>
+                        <span style="font-weight: bold; color: #c00;">${t('knowledge.index.status_failed')}</span>
                     </div>
                     <div style="color: #666; font-size: 14px;">
                         无法连接到服务器获取索引状态，请检查网络连接或刷新页面。
@@ -648,7 +648,7 @@ function selectKnowledgeCategory(category) {
     const dropdown = document.getElementById('knowledge-category-filter-dropdown');
     
     if (trigger && wrapper && dropdown) {
-        const displayText = category || '全部';
+        const displayText = category || t('knowledge.filter.all');
         trigger.querySelector('span').textContent = displayText;
         wrapper.classList.remove('open');
         
@@ -758,8 +758,8 @@ async function searchKnowledgeItems() {
                 container.innerHTML = `
                     <div class="empty-state" style="text-align: center; padding: 40px 20px;">
                         <div style="font-size: 48px; margin-bottom: 20px;">📚</div>
-                        <h3 style="margin-bottom: 10px; color: #666;">知识库功能未启用</h3>
-                        <p style="color: #999; margin-bottom: 20px;">${data.message || '请前往系统设置启用知识检索功能'}</p>
+                        <h3 style="margin-bottom: 10px; color: #666;">${t('knowledge.disabled')}</h3>
+                        <p style="color: #999; margin-bottom: 20px;">${data.message || t('knowledge.goto_settings')}</p>
                         <button onclick="switchToSettings()" style="
                             background: #007bff;
                             color: white;
@@ -768,7 +768,7 @@ async function searchKnowledgeItems() {
                             border-radius: 5px;
                             cursor: pointer;
                             font-size: 14px;
-                        ">前往设置</button>
+                        ">${t('knowledge.goto_settings')}</button>
                     </div>
                 `;
             }
@@ -866,7 +866,7 @@ async function rebuildKnowledgeIndex() {
         if (!confirm('确定要重建索引吗？这可能需要一些时间。')) {
             return;
         }
-        showNotification('正在重建索引...', 'info');
+        showNotification(t('knowledge.index.building') + '...', 'info');
         
         // 先停止现有的轮询
         if (indexProgressInterval) {
@@ -882,7 +882,7 @@ async function rebuildKnowledgeIndex() {
                 <div class="knowledge-index-progress">
                     <div class="progress-header">
                         <span class="progress-icon">🔨</span>
-                        <span class="progress-text">正在重建索引: 准备中...</span>
+                        <span class="progress-text">${t('knowledge.index.building')}: 准备中...</span>
                     </div>
                     <div class="progress-bar-container">
                         <div class="progress-bar" style="width: 0%"></div>
@@ -919,7 +919,7 @@ async function rebuildKnowledgeIndex() {
 // 显示添加知识项模态框
 function showAddKnowledgeItemModal() {
     currentEditingItemId = null;
-    document.getElementById('knowledge-item-modal-title').textContent = '添加知识';
+    document.getElementById('knowledge-item-modal-title').textContent = t('knowledge.modal.add');
     document.getElementById('knowledge-item-category').value = '';
     document.getElementById('knowledge-item-title').value = '';
     document.getElementById('knowledge-item-content').value = '';
@@ -936,7 +936,7 @@ async function editKnowledgeItem(id) {
         const item = await response.json();
         
         currentEditingItemId = id;
-        document.getElementById('knowledge-item-modal-title').textContent = '编辑知识';
+        document.getElementById('knowledge-item-modal-title').textContent = t('knowledge.modal.edit');
         document.getElementById('knowledge-item-category').value = item.category;
         document.getElementById('knowledge-item-title').value = item.title;
         document.getElementById('knowledge-item-content').value = item.content;
@@ -1057,7 +1057,7 @@ async function saveKnowledgeItem() {
                 const wrapper = document.getElementById('knowledge-category-filter-wrapper');
                 const dropdown = document.getElementById('knowledge-category-filter-dropdown');
                 if (trigger && wrapper && dropdown) {
-                    trigger.querySelector('span').textContent = newItemCategory || '全部';
+                    trigger.querySelector('span').textContent = newItemCategory || t('knowledge.filter.all');
                     dropdown.querySelectorAll('.custom-select-option').forEach(opt => {
                         opt.classList.remove('selected');
                         if (opt.getAttribute('data-value') === newItemCategory) {
@@ -1108,7 +1108,7 @@ async function saveKnowledgeItem() {
 
 // 删除知识项
 async function deleteKnowledgeItem(id) {
-    if (!confirm('确定要删除这个知识项吗？')) {
+    if (!confirm(t('knowledge.confirm.delete_item'))) {
         return;
     }
     
@@ -1326,7 +1326,7 @@ function renderRetrievalLogs(logs) {
     updateRetrievalStats(logs);
     
     if (logs.length === 0) {
-        container.innerHTML = '<div class="empty-state">暂无检索记录</div>';
+        container.innerHTML = '<div class="empty-state">' + t('knowledge.retrieval.empty') + '</div>';
         retrievalLogsData = [];
         return;
     }
@@ -1403,7 +1403,7 @@ function renderRetrievalLogs(logs) {
                     <div class="retrieval-log-details-grid">
                         ${log.conversationId ? `
                             <div class="retrieval-log-detail-item">
-                                <span class="detail-label">对话ID</span>
+                                <span class="detail-label">${t('knowledge.label.conv_id')}</span>
                                 <code class="detail-value" title="点击复制" onclick="navigator.clipboard.writeText('${escapeHtml(log.conversationId)}'); this.title='已复制!'; setTimeout(() => this.title='点击复制', 2000);" style="cursor: pointer;">${escapeHtml(log.conversationId)}</code>
                             </div>
                         ` : ''}
@@ -1480,11 +1480,11 @@ function updateRetrievalStats(logs) {
     
     statsContainer.innerHTML = `
         <div class="retrieval-stat-item">
-            <span class="retrieval-stat-label">总检索次数</span>
+            <span class="retrieval-stat-label">${t('knowledge.stats.total_retrievals')}</span>
             <span class="retrieval-stat-value">${totalLogs}</span>
         </div>
         <div class="retrieval-stat-item">
-            <span class="retrieval-stat-label">成功检索</span>
+            <span class="retrieval-stat-label">${t('knowledge.stats.success_retrievals')}</span>
             <span class="retrieval-stat-value text-success">${successfulLogs}</span>
         </div>
         <div class="retrieval-stat-item">
@@ -1591,7 +1591,7 @@ function refreshRetrievalLogs() {
 
 // 删除检索日志
 async function deleteRetrievalLog(id, index) {
-    if (!confirm('确定要删除这条检索记录吗？')) {
+    if (!confirm(t('knowledge.confirm.delete_record'))) {
         return;
     }
     
@@ -1713,11 +1713,11 @@ function updateRetrievalStatsAfterDelete() {
     
     statsContainer.innerHTML = `
         <div class="retrieval-stat-item">
-            <span class="retrieval-stat-label">总检索次数</span>
+            <span class="retrieval-stat-label">${t('knowledge.stats.total_retrievals')}</span>
             <span class="retrieval-stat-value">${totalLogs}</span>
         </div>
         <div class="retrieval-stat-item">
-            <span class="retrieval-stat-label">成功检索</span>
+            <span class="retrieval-stat-label">${t('knowledge.stats.success_retrievals')}</span>
             <span class="retrieval-stat-value text-success">${successfulLogs}</span>
         </div>
         <div class="retrieval-stat-item">
@@ -1866,7 +1866,7 @@ function showRetrievalLogDetailsModal(log, retrievedItems) {
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                         ${log.conversationId ? `
                             <div style="padding: 12px; background: var(--bg-secondary); border-radius: 6px;">
-                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 4px;">对话ID</div>
+                                <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 4px;">${t('knowledge.label.conv_id')}</div>
                                 <code style="font-size: 0.8125rem; color: var(--text-primary); word-break: break-all; cursor: pointer;" 
                                       onclick="navigator.clipboard.writeText('${escapeHtml(log.conversationId)}'); this.title='已复制!'; setTimeout(() => this.title='点击复制', 2000);" 
                                       title="点击复制">${escapeHtml(log.conversationId)}</code>

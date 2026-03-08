@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cyberstrike-ai/internal/config"
+	"cyberstrike-ai/internal/i18n"
 	"cyberstrike-ai/internal/security"
 
 	"github.com/gin-gonic/gin"
@@ -43,13 +44,13 @@ type changePasswordRequest struct {
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req loginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "密码不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("auth.error.password_empty")})
 		return
 	}
 
 	token, expiresAt, err := h.manager.Authenticate(req.Password)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "密码错误"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T("auth.error.password_wrong")})
 		return
 	}
 
@@ -73,14 +74,14 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	h.manager.RevokeToken(token)
-	c.JSON(http.StatusOK, gin.H{"message": "已退出登录"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T("auth.message.logout")})
 }
 
 // ChangePassword updates the login password.
 func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	var req changePasswordRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "参数无效"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("auth.error.invalid_params")})
 		return
 	}
 
@@ -88,22 +89,22 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 	newPassword := strings.TrimSpace(req.NewPassword)
 
 	if oldPassword == "" || newPassword == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "当前密码和新密码均不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("auth.error.passwords_required")})
 		return
 	}
 
 	if len(newPassword) < 8 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "新密码长度至少需要 8 位"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("auth.error.password_too_short")})
 		return
 	}
 
 	if oldPassword == newPassword {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "新密码不能与旧密码相同"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("auth.error.password_same")})
 		return
 	}
 
 	if !h.manager.CheckPassword(oldPassword) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "当前密码不正确"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("auth.error.password_incorrect")})
 		return
 	}
 
@@ -111,7 +112,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		if h.logger != nil {
 			h.logger.Error("保存新密码失败", zap.Error(err))
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存新密码失败，请重试"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T("auth.error.save_password_failed")})
 		return
 	}
 
@@ -119,7 +120,7 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		if h.logger != nil {
 			h.logger.Error("更新认证配置失败", zap.Error(err))
 		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "更新认证配置失败"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T("auth.error.update_config_failed")})
 		return
 	}
 
@@ -132,20 +133,20 @@ func (h *AuthHandler) ChangePassword(c *gin.Context) {
 		h.logger.Info("登录密码已更新，所有会话已失效")
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "密码已更新，请使用新密码重新登录"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T("auth.message.password_updated")})
 }
 
 // Validate returns the current session status.
 func (h *AuthHandler) Validate(c *gin.Context) {
 	token := c.GetString(security.ContextAuthTokenKey)
 	if token == "" {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "会话无效"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T("auth.error.session_invalid")})
 		return
 	}
 
 	session, ok := h.manager.ValidateToken(token)
 	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "会话已过期"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": i18n.T("auth.error.session_expired")})
 		return
 	}
 

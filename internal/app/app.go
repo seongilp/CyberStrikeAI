@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
+	"html/template"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +16,7 @@ import (
 	"cyberstrike-ai/internal/config"
 	"cyberstrike-ai/internal/database"
 	"cyberstrike-ai/internal/handler"
+	"cyberstrike-ai/internal/i18n"
 	"cyberstrike-ai/internal/knowledge"
 	"cyberstrike-ai/internal/robot"
 	"cyberstrike-ai/internal/logger"
@@ -53,6 +56,24 @@ type App struct {
 
 // New 创建新应用
 func New(cfg *config.Config, log *logger.Logger) (*App, error) {
+	// 初始化 i18n（在所有组件之前）
+	messagesDir := filepath.Join(filepath.Dir(cfg.Database.Path), "..", "messages")
+	// 使用可执行文件所在目录的相对路径
+	if exePath, err := os.Executable(); err == nil {
+		messagesDir = filepath.Join(filepath.Dir(exePath), "messages")
+	}
+	// 如果 messages 目录不存在，尝试当前目录
+	if _, err := os.Stat(messagesDir); os.IsNotExist(err) {
+		messagesDir = "messages"
+	}
+	lang := cfg.Language
+	if lang == "" {
+		lang = "cn"
+	}
+	if err := i18n.Init(messagesDir, lang); err != nil {
+		log.Logger.Warn("i18n 初始化失败，使用默认语言", zap.Error(err))
+	}
+
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
@@ -840,6 +861,7 @@ func setupRoutes(
 
 	// 静态文件
 	router.Static("/static", "./web/static")
+	router.SetFuncMap(template.FuncMap{"t": i18n.T})
 	router.LoadHTMLGlob("web/templates/*")
 
 	// 前端页面
@@ -848,7 +870,11 @@ func setupRoutes(
 		if version == "" {
 			version = "v1.0.0"
 		}
-		c.HTML(http.StatusOK, "index.html", gin.H{"Version": version})
+		i18nJSON, _ := json.Marshal(i18n.TemplateMap())
+		c.HTML(http.StatusOK, "index.html", gin.H{
+			"Version":  version,
+			"I18NJson": template.JS(i18nJSON),
+		})
 	})
 }
 

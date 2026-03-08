@@ -2,46 +2,44 @@
 
 set -euo pipefail
 
-# CyberStrikeAI 一键部署启动脚本
+# CyberStrikeAI 원클릭 배포 시작 스크립트
 ROOT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT_DIR"
 
-# 颜色定义
+# 색상 정의
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+NC='\033[0m' # 색상 초기화
 
-# 打印带颜色的消息
+# 색상 메시지 출력 함수
 info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
 success() { echo -e "${GREEN}✅ $1${NC}"; }
 warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 error() { echo -e "${RED}❌ $1${NC}"; }
 note() { echo -e "${CYAN}ℹ️  $1${NC}"; }
 
-# 临时源配置（仅在此脚本中生效）
+# 임시 미러 설정 (이 스크립트 실행 중에만 적용)
 PIP_INDEX_URL="${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}"
 GOPROXY="${GOPROXY:-https://goproxy.cn,direct}"
 
-# 保存原始环境变量（用于恢复）
+# 원래 환경 변수 저장 (복원용)
 ORIGINAL_PIP_INDEX_URL="${PIP_INDEX_URL:-}"
 ORIGINAL_GOPROXY="${GOPROXY:-}"
 
-# 进度显示函数
+# 진행 상태 표시 함수
 show_progress() {
     local pid=$1
     local message=$2
     local i=0
     local dots=""
-    
-    # 检查进程是否存在
+
     if ! kill -0 "$pid" 2>/dev/null; then
-        # 进程已经结束，立即返回
         return 0
     fi
-    
+
     while kill -0 "$pid" 2>/dev/null; do
         i=$((i + 1))
         case $((i % 4)) in
@@ -52,8 +50,7 @@ show_progress() {
         esac
         printf "\r${BLUE}⏳ %s%s${NC}" "$message" "$dots"
         sleep 0.5
-        
-        # 再次检查进程是否还存在
+
         if ! kill -0 "$pid" 2>/dev/null; then
             break
         fi
@@ -63,20 +60,19 @@ show_progress() {
 
 echo ""
 echo "=========================================="
-echo "  CyberStrikeAI 一键部署启动脚本"
+echo "  CyberStrikeAI 원클릭 배포 시작 스크립트"
 echo "=========================================="
 echo ""
 
-# 显示临时源配置信息
 echo ""
-warning "⚠️  注意：此脚本将使用临时镜像源加速下载"
+warning "⚠️  주의: 이 스크립트는 임시 미러를 사용하여 다운로드를 가속합니다"
 echo ""
-info "Python pip 临时镜像源:"
+info "Python pip 임시 미러:"
 echo "  ${PIP_INDEX_URL}"
-info "Go Proxy 临时镜像源:"
+info "Go Proxy 임시 미러:"
 echo "  ${GOPROXY}"
 echo ""
-note "这些设置仅在脚本运行期间生效，不会修改系统配置"
+note "이 설정은 스크립트 실행 중에만 적용되며 시스템 설정을 변경하지 않습니다"
 echo ""
 sleep 1
 
@@ -85,250 +81,230 @@ VENV_DIR="$ROOT_DIR/venv"
 REQUIREMENTS_FILE="$ROOT_DIR/requirements.txt"
 BINARY_NAME="cyberstrike-ai"
 
-# 检查配置文件
+# 설정 파일 확인
 if [ ! -f "$CONFIG_FILE" ]; then
-    error "配置文件 config.yaml 不存在"
-    info "请确保在项目根目录运行此脚本"
+    error "설정 파일 config.yaml 이 존재하지 않습니다"
+    info "프로젝트 루트 디렉토리에서 스크립트를 실행했는지 확인하세요"
     exit 1
 fi
 
-# 检查并安装 Python 环境
+# Python 환경 확인
 check_python() {
     if ! command -v python3 >/dev/null 2>&1; then
-        error "未找到 python3"
+        error "python3 를 찾을 수 없습니다"
         echo ""
-        info "请先安装 Python 3.10 或更高版本："
+        info "Python 3.10 이상을 먼저 설치해주세요:"
         echo "  macOS:   brew install python3"
         echo "  Ubuntu:  sudo apt-get install python3 python3-venv"
         echo "  CentOS:  sudo yum install python3 python3-pip"
         exit 1
     fi
-    
+
     PYTHON_VERSION=$(python3 --version 2>&1 | awk '{print $2}')
     PYTHON_MAJOR=$(echo "$PYTHON_VERSION" | cut -d. -f1)
     PYTHON_MINOR=$(echo "$PYTHON_VERSION" | cut -d. -f2)
-    
+
     if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 10 ]); then
-        error "Python 版本过低: $PYTHON_VERSION (需要 3.10+)"
+        error "Python 버전이 너무 낮습니다: $PYTHON_VERSION (3.10 이상 필요)"
         exit 1
     fi
-    
-    success "Python 环境检查通过: $PYTHON_VERSION"
+
+    success "Python 환경 확인 완료: $PYTHON_VERSION"
 }
 
-# 检查并安装 Go 环境
+# Go 환경 확인
 check_go() {
     if ! command -v go >/dev/null 2>&1; then
-        error "未找到 Go"
+        error "Go 를 찾을 수 없습니다"
         echo ""
-        info "请先安装 Go 1.21 或更高版本："
+        info "Go 1.21 이상을 먼저 설치해주세요:"
         echo "  macOS:   brew install go"
         echo "  Ubuntu:  sudo apt-get install golang-go"
         echo "  CentOS:  sudo yum install golang"
-        echo "  或访问:  https://go.dev/dl/"
+        echo "  또는:    https://go.dev/dl/"
         exit 1
     fi
-    
+
     GO_VERSION=$(go version | awk '{print $3}' | sed 's/go//')
     GO_MAJOR=$(echo "$GO_VERSION" | cut -d. -f1)
     GO_MINOR=$(echo "$GO_VERSION" | cut -d. -f2)
-    
+
     if [ "$GO_MAJOR" -lt 1 ] || ([ "$GO_MAJOR" -eq 1 ] && [ "$GO_MINOR" -lt 21 ]); then
-        error "Go 版本过低: $GO_VERSION (需要 1.21+)"
+        error "Go 버전이 너무 낮습니다: $GO_VERSION (1.21 이상 필요)"
         exit 1
     fi
-    
-    success "Go 环境检查通过: $(go version)"
+
+    success "Go 환경 확인 완료: $(go version)"
 }
 
-# 设置 Python 虚拟环境
+# Python 가상환경 설정
 setup_python_env() {
     if [ ! -d "$VENV_DIR" ]; then
-        info "创建 Python 虚拟环境..."
+        info "Python 가상환경 생성 중..."
         python3 -m venv "$VENV_DIR"
-        success "虚拟环境创建完成"
+        success "가상환경 생성 완료"
     else
-        info "Python 虚拟环境已存在"
+        info "Python 가상환경이 이미 존재합니다"
     fi
-    
-    info "激活虚拟环境..."
+
+    info "가상환경 활성화 중..."
     # shellcheck disable=SC1091
     source "$VENV_DIR/bin/activate"
-    
+
     if [ -f "$REQUIREMENTS_FILE" ]; then
         echo ""
         note "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        note "⚠️  使用临时 pip 镜像源（仅本次脚本运行有效）"
-        note "   镜像地址: ${PIP_INDEX_URL}"
-        note "   如需永久配置，请设置环境变量 PIP_INDEX_URL"
+        note "⚠️  임시 pip 미러 사용 중 (이번 스크립트 실행에만 적용)"
+        note "   미러 주소: ${PIP_INDEX_URL}"
+        note "   영구 설정이 필요하면 환경변수 PIP_INDEX_URL 을 설정하세요"
         note "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo ""
-        
-        info "升级 pip..."
+
+        info "pip 업그레이드 중..."
         pip install --index-url "$PIP_INDEX_URL" --upgrade pip >/dev/null 2>&1 || true
-        
-        info "安装 Python 依赖包..."
+
+        info "Python 패키지 설치 중..."
         echo ""
-        
-        # 尝试安装依赖，捕获错误输出并显示进度
+
         PIP_LOG=$(mktemp)
         (
-            set +e  # 在子shell中禁用错误退出
+            set +e
             pip install --index-url "$PIP_INDEX_URL" -r "$REQUIREMENTS_FILE" >"$PIP_LOG" 2>&1
             echo $? > "${PIP_LOG}.exit"
         ) &
         PIP_PID=$!
-        
-        # 等待一小段时间，确保进程启动
+
         sleep 0.1
-        
-        # 显示进度（如果进程还在运行）
+
         if kill -0 "$PIP_PID" 2>/dev/null; then
-            show_progress "$PIP_PID" "正在安装依赖包"
+            show_progress "$PIP_PID" "패키지 설치 중"
         else
-            # 进程已经结束，等待一下确保退出码文件已写入
             sleep 0.2
         fi
-        
-        # 等待进程完成，忽略 wait 的退出码
+
         wait "$PIP_PID" 2>/dev/null || true
-        
+
         PIP_EXIT_CODE=0
         if [ -f "${PIP_LOG}.exit" ]; then
             PIP_EXIT_CODE=$(cat "${PIP_LOG}.exit" 2>/dev/null || echo "1")
             rm -f "${PIP_LOG}.exit" 2>/dev/null || true
         else
-            # 如果没有退出码文件，检查日志中是否有错误
             if [ -f "$PIP_LOG" ] && grep -q -i "error\|failed\|exception" "$PIP_LOG" 2>/dev/null; then
                 PIP_EXIT_CODE=1
             fi
         fi
-        
+
         if [ $PIP_EXIT_CODE -eq 0 ]; then
-            success "Python 依赖安装完成"
+            success "Python 패키지 설치 완료"
         else
-            # 检查是否是 angr 安装失败（需要 Rust）
             if grep -q "angr" "$PIP_LOG" && grep -q "Rust compiler\|can't find Rust" "$PIP_LOG"; then
-                warning "angr 安装失败（需要 Rust 编译器）"
+                warning "angr 설치 실패 (Rust 컴파일러 필요)"
                 echo ""
-                info "angr 是可选依赖，主要用于二进制分析工具"
-                info "如果需要使用 angr，请先安装 Rust："
-                echo "  macOS:   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
-                echo "  Ubuntu:  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
-                echo "  或访问:  https://rustup.rs/"
+                info "angr 는 선택적 의존성으로 주로 바이너리 분석 도구에 사용됩니다"
+                info "angr 가 필요하다면 먼저 Rust 를 설치하세요:"
+                echo "  macOS/Ubuntu: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+                echo "  또는:         https://rustup.rs/"
                 echo ""
-                info "其他依赖已安装，可以继续使用（部分工具可能不可用）"
+                info "다른 패키지는 설치되었으며 계속 실행할 수 있습니다 (일부 도구 사용 불가)"
             else
-                warning "部分 Python 依赖安装失败，但可以继续尝试运行"
-                warning "如果遇到问题，请检查错误信息并手动安装缺失的依赖"
-                # 显示最后几行错误信息
+                warning "일부 Python 패키지 설치에 실패했지만 계속 시도합니다"
+                warning "문제가 발생하면 오류 메시지를 확인하고 누락된 패키지를 수동으로 설치하세요"
                 echo ""
-                info "错误详情（最后 10 行）："
+                info "오류 상세 (마지막 10줄):"
                 tail -n 10 "$PIP_LOG" | sed 's/^/  /'
                 echo ""
             fi
         fi
         rm -f "$PIP_LOG"
     else
-        warning "未找到 requirements.txt，跳过 Python 依赖安装"
+        warning "requirements.txt 를 찾을 수 없습니다. Python 패키지 설치를 건너뜁니다"
     fi
 }
 
-# 构建 Go 项目
+# Go 프로젝트 빌드
 build_go_project() {
     echo ""
     note "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    note "⚠️  使用临时 Go Proxy（仅本次脚本运行有效）"
-    note "   Proxy 地址: ${GOPROXY}"
-    note "   如需永久配置，请设置环境变量 GOPROXY"
+    note "⚠️  임시 Go Proxy 사용 중 (이번 스크립트 실행에만 적용)"
+    note "   Proxy 주소: ${GOPROXY}"
+    note "   영구 설정이 필요하면 환경변수 GOPROXY 를 설정하세요"
     note "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo ""
-    
-    info "下载 Go 依赖..."
+
+    info "Go 의존성 다운로드 중..."
     GO_DOWNLOAD_LOG=$(mktemp)
     (
-        set +e  # 在子shell中禁用错误退出
+        set +e
         export GOPROXY="$GOPROXY"
         go mod download >"$GO_DOWNLOAD_LOG" 2>&1
         echo $? > "${GO_DOWNLOAD_LOG}.exit"
     ) &
     GO_DOWNLOAD_PID=$!
-    
-    # 等待一小段时间，确保进程启动
+
     sleep 0.1
-    
-    # 显示进度（如果进程还在运行）
+
     if kill -0 "$GO_DOWNLOAD_PID" 2>/dev/null; then
-        show_progress "$GO_DOWNLOAD_PID" "正在下载 Go 依赖"
+        show_progress "$GO_DOWNLOAD_PID" "Go 의존성 다운로드 중"
     else
-        # 进程已经结束，等待一下确保退出码文件已写入
         sleep 0.2
     fi
-    
-    # 等待进程完成，忽略 wait 的退出码
+
     wait "$GO_DOWNLOAD_PID" 2>/dev/null || true
-    
+
     GO_DOWNLOAD_EXIT_CODE=0
     if [ -f "${GO_DOWNLOAD_LOG}.exit" ]; then
         GO_DOWNLOAD_EXIT_CODE=$(cat "${GO_DOWNLOAD_LOG}.exit" 2>/dev/null || echo "1")
         rm -f "${GO_DOWNLOAD_LOG}.exit" 2>/dev/null || true
     else
-        # 如果没有退出码文件，检查日志中是否有错误
         if [ -f "$GO_DOWNLOAD_LOG" ] && grep -q -i "error\|failed" "$GO_DOWNLOAD_LOG" 2>/dev/null; then
             GO_DOWNLOAD_EXIT_CODE=1
         fi
     fi
     rm -f "$GO_DOWNLOAD_LOG" 2>/dev/null || true
-    
+
     if [ $GO_DOWNLOAD_EXIT_CODE -ne 0 ]; then
-        error "Go 依赖下载失败"
+        error "Go 의존성 다운로드 실패"
         exit 1
     fi
-    success "Go 依赖下载完成"
-    
-    info "构建项目..."
+    success "Go 의존성 다운로드 완료"
+
+    info "프로젝트 빌드 중..."
     GO_BUILD_LOG=$(mktemp)
     (
-        set +e  # 在子shell中禁用错误退出
+        set +e
         export GOPROXY="$GOPROXY"
         go build -o "$BINARY_NAME" cmd/server/main.go >"$GO_BUILD_LOG" 2>&1
         echo $? > "${GO_BUILD_LOG}.exit"
     ) &
     GO_BUILD_PID=$!
-    
-    # 等待一小段时间，确保进程启动
+
     sleep 0.1
-    
-    # 显示进度（如果进程还在运行）
+
     if kill -0 "$GO_BUILD_PID" 2>/dev/null; then
-        show_progress "$GO_BUILD_PID" "正在构建项目"
+        show_progress "$GO_BUILD_PID" "프로젝트 빌드 중"
     else
-        # 进程已经结束，等待一下确保退出码文件已写入
         sleep 0.2
     fi
-    
-    # 等待进程完成，忽略 wait 的退出码
+
     wait "$GO_BUILD_PID" 2>/dev/null || true
-    
+
     GO_BUILD_EXIT_CODE=0
     if [ -f "${GO_BUILD_LOG}.exit" ]; then
         GO_BUILD_EXIT_CODE=$(cat "${GO_BUILD_LOG}.exit" 2>/dev/null || echo "1")
         rm -f "${GO_BUILD_LOG}.exit" 2>/dev/null || true
     else
-        # 如果没有退出码文件，检查日志中是否有错误
         if [ -f "$GO_BUILD_LOG" ] && grep -q -i "error\|failed" "$GO_BUILD_LOG" 2>/dev/null; then
             GO_BUILD_EXIT_CODE=1
         fi
     fi
-    
+
     if [ $GO_BUILD_EXIT_CODE -eq 0 ]; then
-        success "项目构建完成: $BINARY_NAME"
+        success "프로젝트 빌드 완료: $BINARY_NAME"
         rm -f "$GO_BUILD_LOG"
     else
-        error "项目构建失败"
-        # 显示构建错误
+        error "프로젝트 빌드 실패"
         echo ""
-        info "构建错误详情："
+        info "빌드 오류 상세:"
         cat "$GO_BUILD_LOG" | sed 's/^/  /'
         echo ""
         rm -f "$GO_BUILD_LOG"
@@ -336,54 +312,48 @@ build_go_project() {
     fi
 }
 
-# 检查是否需要重新构建
+# 재빌드 필요 여부 확인
 need_rebuild() {
     if [ ! -f "$BINARY_NAME" ]; then
-        return 0  # 需要构建
+        return 0  # 빌드 필요
     fi
-    
-    # 检查源代码是否有更新
+
     if [ "$BINARY_NAME" -ot cmd/server/main.go ] || \
        [ "$BINARY_NAME" -ot go.mod ] || \
        find internal cmd -name "*.go" -newer "$BINARY_NAME" 2>/dev/null | grep -q .; then
-        return 0  # 需要重新构建
+        return 0  # 재빌드 필요
     fi
-    
-    return 1  # 不需要构建
+
+    return 1  # 빌드 불필요
 }
 
-# 主流程
+# 메인 프로세스
 main() {
-    # 环境检查
-    info "检查运行环境..."
+    info "실행 환경 확인 중..."
     check_python
     check_go
     echo ""
-    
-    # 设置 Python 环境
-    info "设置 Python 环境..."
+
+    info "Python 환경 설정 중..."
     setup_python_env
     echo ""
-    
-    # 构建 Go 项目
+
     if need_rebuild; then
-        info "准备构建项目..."
+        info "프로젝트 빌드 준비 중..."
         build_go_project
     else
-        success "可执行文件已是最新，跳过构建"
+        success "실행 파일이 최신 상태입니다. 빌드를 건너뜁니다"
     fi
     echo ""
-    
-    # 启动服务器
-    success "所有准备工作完成！"
+
+    success "모든 준비가 완료되었습니다!"
     echo ""
-    info "启动 CyberStrikeAI 服务器..."
+    info "CyberStrikeAI 서버 시작 중..."
     echo "=========================================="
     echo ""
-    
-    # 运行服务器
+
     exec "./$BINARY_NAME"
 }
 
-# 执行主流程
+# 메인 프로세스 실행
 main

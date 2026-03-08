@@ -24,7 +24,7 @@ const DRAFT_SAVE_DELAY = 500; // 500ms防抖延迟
 
 // 对话文件上传相关（后端会拼接路径与内容发给大模型，前端不再重复发文件列表）
 const MAX_CHAT_FILES = 10;
-const CHAT_FILE_DEFAULT_PROMPT = '请根据上传的文件内容进行分析。';
+const CHAT_FILE_DEFAULT_PROMPT = () => t('chat.file.default_prompt');
 /** @type {{ fileName: string, content: string, mimeType: string }[]} */
 let chatAttachments = [];
 
@@ -121,7 +121,7 @@ async function sendMessage() {
     }
     // 有附件且用户未输入时，发一句简短默认提示即可（后端会拼接路径和文件内容给大模型）
     if (hasAttachments && !message) {
-        message = CHAT_FILE_DEFAULT_PROMPT;
+        message = CHAT_FILE_DEFAULT_PROMPT();
     }
 
     // 显示用户消息（含附件名，便于用户确认）
@@ -263,9 +263,9 @@ function renderChatFileChips() {
         const remove = document.createElement('button');
         remove.type = 'button';
         remove.className = 'chat-file-chip-remove';
-        remove.title = '移除';
+        remove.title = t('chat.btn.remove');
         remove.innerHTML = '×';
-        remove.setAttribute('aria-label', '移除 ' + a.fileName);
+        remove.setAttribute('aria-label', t('chat.btn.remove_file').replace('{0}', a.fileName));
         remove.addEventListener('click', () => removeChatAttachment(i));
         chip.appendChild(name);
         chip.appendChild(remove);
@@ -283,7 +283,7 @@ function appendChatFilePrompt() {
     const input = document.getElementById('chat-input');
     if (!input || !chatAttachments.length) return;
     if (!input.value.trim()) {
-        input.value = CHAT_FILE_DEFAULT_PROMPT;
+        input.value = CHAT_FILE_DEFAULT_PROMPT();
         adjustTextareaHeight(input);
     }
 }
@@ -313,7 +313,7 @@ function addFilesToChat(files) {
     if (!files || !files.length) return;
     const next = Array.from(files);
     if (chatAttachments.length + next.length > MAX_CHAT_FILES) {
-        alert('最多同时上传 ' + MAX_CHAT_FILES + ' 个文件，当前已选 ' + chatAttachments.length + ' 个。');
+        alert(t('chat.file.max_exceeded').replace('{0}', MAX_CHAT_FILES).replace('{1}', chatAttachments.length));
         return;
     }
     const addOne = (file) => {
@@ -322,7 +322,7 @@ function addFilesToChat(files) {
             renderChatFileChips();
             appendChatFilePrompt();
         }).catch(() => {
-            alert('读取文件失败：' + file.name);
+            alert(t('chat.file.read_failed').replace('{0}', file.name));
         });
     };
     let p = Promise.resolve();
@@ -720,14 +720,14 @@ function renderMentionSuggestions({ showLoading = false } = {}) {
     const previousScrollTop = canPreserveScroll ? existingList.scrollTop : 0;
 
     if (showLoading) {
-        mentionSuggestionsEl.innerHTML = '<div class="mention-empty">正在加载工具...</div>';
+        mentionSuggestionsEl.innerHTML = '<div class="mention-empty">' + t('chat.mention.loading') + '</div>';
         mentionSuggestionsEl.style.display = 'block';
         delete mentionSuggestionsEl.dataset.lastMentionQuery;
         return;
     }
 
     if (!mentionFilteredTools.length) {
-        mentionSuggestionsEl.innerHTML = '<div class="mention-empty">没有匹配的工具</div>';
+        mentionSuggestionsEl.innerHTML = '<div class="mention-empty">' + t('chat.mention.no_match') + '</div>';
         mentionSuggestionsEl.style.display = 'block';
         mentionSuggestionsEl.dataset.lastMentionQuery = currentQuery;
         return;
@@ -1129,8 +1129,8 @@ function addMessage(role, content, mcpExecutionIds = null, progressId = null, cr
     if (role === 'assistant') {
         const copyBtn = document.createElement('button');
         copyBtn.className = 'message-copy-btn';
-        copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>复制</span>';
-        copyBtn.title = '复制消息内容';
+        copyBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>' + t('chat.btn.copy') + '</span>';
+        copyBtn.title = t('chat.btn.copy');
         copyBtn.onclick = function(e) {
             e.stopPropagation();
             copyMessageToClipboard(messageDiv, this);
@@ -1169,18 +1169,18 @@ function addMessage(role, content, mcpExecutionIds = null, progressId = null, cr
         
         const mcpLabel = document.createElement('div');
         mcpLabel.className = 'mcp-call-label';
-        mcpLabel.textContent = '📋 渗透测试详情';
+        mcpLabel.textContent = t('chat.mcp.label');
         mcpSection.appendChild(mcpLabel);
-        
+
         const buttonsContainer = document.createElement('div');
         buttonsContainer.className = 'mcp-call-buttons';
-        
+
         // 如果有MCP执行ID，添加MCP调用详情按钮
         if (mcpExecutionIds && Array.isArray(mcpExecutionIds) && mcpExecutionIds.length > 0) {
             mcpExecutionIds.forEach((execId, index) => {
                 const detailBtn = document.createElement('button');
                 detailBtn.className = 'mcp-detail-btn';
-                detailBtn.innerHTML = `<span>调用 #${index + 1}</span>`;
+                detailBtn.innerHTML = '<span>' + t('chat.mcp.call').replace('{0}', index + 1) + '</span>';
                 detailBtn.onclick = () => showMCPDetail(execId);
                 buttonsContainer.appendChild(detailBtn);
                 // 异步获取工具名称并更新按钮文本
@@ -1192,7 +1192,7 @@ function addMessage(role, content, mcpExecutionIds = null, progressId = null, cr
         if (progressId) {
             const progressDetailBtn = document.createElement('button');
             progressDetailBtn.className = 'mcp-detail-btn process-detail-btn';
-            progressDetailBtn.innerHTML = '<span>展开详情</span>';
+            progressDetailBtn.innerHTML = '<span>' + t('chat.details.expand') + '</span>';
             progressDetailBtn.onclick = () => toggleProcessDetails(progressId, messageDiv.id);
             buttonsContainer.appendChild(progressDetailBtn);
             // 存储进度ID到消息元素
@@ -1236,7 +1236,7 @@ function copyMessageToClipboard(messageDiv, button) {
                     showCopySuccess(button);
                 }).catch(err => {
                     console.error('复制失败:', err);
-                    alert('复制失败，请手动选择内容复制');
+                    alert(t('chat.copy.failed'));
                 });
             }
             return;
@@ -1247,11 +1247,11 @@ function copyMessageToClipboard(messageDiv, button) {
             showCopySuccess(button);
         }).catch(err => {
             console.error('复制失败:', err);
-            alert('复制失败，请手动选择内容复制');
+            alert(t('chat.copy.failed'));
         });
     } catch (error) {
         console.error('复制消息时出错:', error);
-        alert('复制失败，请手动选择内容复制');
+        alert(t('chat.copy.failed'));
     }
 }
 
@@ -1259,7 +1259,7 @@ function copyMessageToClipboard(messageDiv, button) {
 function showCopySuccess(button) {
     if (button) {
         const originalText = button.innerHTML;
-        button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>已复制</span>';
+        button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg><span>' + t('chat.btn.copied') + '</span>';
         button.style.color = '#10b981';
         button.style.background = 'rgba(16, 185, 129, 0.1)';
         button.style.borderColor = 'rgba(16, 185, 129, 0.3)';
@@ -1301,11 +1301,11 @@ function renderProcessDetails(messageId, processDetails) {
     if (!mcpLabel && !buttonsContainer) {
         mcpLabel = document.createElement('div');
         mcpLabel.className = 'mcp-call-label';
-        mcpLabel.textContent = '📋 渗透测试详情';
+        mcpLabel.textContent = t('chat.mcp.label');
         mcpSection.appendChild(mcpLabel);
-    } else if (mcpLabel && mcpLabel.textContent !== '📋 渗透测试详情') {
+    } else if (mcpLabel && mcpLabel.textContent !== t('chat.mcp.label')) {
         // 如果标签存在但不是统一格式，更新它
-        mcpLabel.textContent = '📋 渗透测试详情';
+        mcpLabel.textContent = t('chat.mcp.label');
     }
     
     // 如果没有按钮容器，创建一个
@@ -1320,7 +1320,7 @@ function renderProcessDetails(messageId, processDetails) {
     if (!processDetailBtn) {
         processDetailBtn = document.createElement('button');
         processDetailBtn.className = 'mcp-detail-btn process-detail-btn';
-        processDetailBtn.innerHTML = '<span>展开详情</span>';
+        processDetailBtn.innerHTML = '<span>' + t('chat.details.expand') + '</span>';
         processDetailBtn.onclick = () => toggleProcessDetails(null, messageId);
         buttonsContainer.appendChild(processDetailBtn);
     }
@@ -1360,7 +1360,7 @@ function renderProcessDetails(messageId, processDetails) {
     // 如果没有processDetails或为空，显示空状态
     if (!processDetails || processDetails.length === 0) {
         // 显示空状态提示
-        timeline.innerHTML = '<div class="progress-timeline-empty">暂无过程详情（可能执行过快或未触发详细事件）</div>';
+        timeline.innerHTML = '<div class="progress-timeline-empty">' + t('chat.progress.empty') + '</div>';
         // 默认折叠
         timeline.classList.remove('expanded');
         return;
@@ -1425,7 +1425,7 @@ function renderProcessDetails(messageId, processDetails) {
         // 更新按钮文本为"展开详情"
         const processDetailBtn = messageElement.querySelector('.process-detail-btn');
         if (processDetailBtn) {
-            processDetailBtn.innerHTML = '<span>展开详情</span>';
+            processDetailBtn.innerHTML = '<span>' + t('chat.details.expand') + '</span>';
         }
     }
 }
@@ -1575,7 +1575,7 @@ async function showMCPDetail(executionId) {
                     }
                 }
             } else {
-                responseElement.textContent = '暂无响应数据';
+                responseElement.textContent = t('chat.no_response');
             }
             
             // 显示模态框
@@ -1613,11 +1613,11 @@ function copyDetailBlock(elementId, triggerBtn = null) {
         if (!triggerBtn) {
             return;
         }
-        triggerBtn.textContent = '已复制';
+        triggerBtn.textContent = t('chat.btn.copied');
         triggerBtn.disabled = true;
         setTimeout(() => {
             triggerBtn.disabled = false;
-            triggerBtn.textContent = triggerBtn.dataset.originalLabel || originalLabel || '复制';
+            triggerBtn.textContent = triggerBtn.dataset.originalLabel || originalLabel || t('chat.btn.copy');
         }, 1200);
     };
 
@@ -1656,9 +1656,9 @@ function copyDetailBlock(elementId, triggerBtn = null) {
         .catch(() => {
             if (triggerBtn) {
                 triggerBtn.disabled = false;
-                triggerBtn.textContent = triggerBtn.dataset.originalLabel || originalLabel || '复制';
+                triggerBtn.textContent = triggerBtn.dataset.originalLabel || originalLabel || t('chat.btn.copy');
             }
-            alert('复制失败，请手动选择文本复制。');
+            alert(t('chat.copy.failed'));
         });
 }
 
@@ -1854,7 +1854,7 @@ function createConversationListItem(conversation) {
                   stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     `;
-    deleteBtn.title = '删除对话';
+    deleteBtn.title = t('chat.conv.delete_title');
     deleteBtn.onclick = (e) => {
         e.stopPropagation();
         deleteConversation(conversation.id);
@@ -2108,7 +2108,7 @@ async function loadConversation(conversationId) {
 async function deleteConversation(conversationId, skipConfirm = false) {
     // 确认删除（如果调用者没有跳过确认）
     if (!skipConfirm) {
-        if (!confirm('确定要删除这个对话吗？此操作不可恢复。')) {
+        if (!confirm(t('chat.conv.confirm_delete'))) {
             return;
         }
     }
@@ -2145,7 +2145,7 @@ async function deleteConversation(conversationId, skipConfirm = false) {
         loadConversations();
     } catch (error) {
         console.error('删除对话失败:', error);
-        alert('删除对话失败: ' + error.message);
+        alert(t('chat.conv.delete_failed').replace('{0}', error.message || ''));
     }
 }
 
@@ -2219,7 +2219,7 @@ async function showAttackChain(conversationId) {
     // 清空容器
     const container = document.getElementById('attack-chain-container');
     if (container) {
-        container.innerHTML = '<div class="loading-spinner">加载中...</div>';
+        container.innerHTML = '<div class="loading-spinner">' + t('chat.attack.loading') + '</div>';
     }
     
     // 隐藏详情面板
@@ -2319,7 +2319,7 @@ async function loadAttackChain(conversationId) {
         console.error('加载攻击链失败:', error);
         const container = document.getElementById('attack-chain-container');
         if (container) {
-            container.innerHTML = `<div class="error-message">加载失败: ${error.message}</div>`;
+            container.innerHTML = '<div class="error-message">' + t('chat.attack.load_failed').replace('{0}', error.message) + '</div>';
         }
         // 错误时也重置加载状态
         setAttackChainLoading(conversationId, false);
@@ -2345,7 +2345,7 @@ function renderAttackChain(chainData) {
     container.innerHTML = '';
     
     if (!chainData.nodes || chainData.nodes.length === 0) {
-        container.innerHTML = '<div class="empty-message">暂无攻击链数据</div>';
+        container.innerHTML = '<div class="empty-message">' + t('chat.attack.no_data') + '</div>';
         return;
     }
     
@@ -3296,7 +3296,7 @@ function updateAttackChainStats(chainData) {
     if (statsElement) {
         const nodeCount = chainData.nodes ? chainData.nodes.length : 0;
         const edgeCount = chainData.edges ? chainData.edges.length : 0;
-        statsElement.textContent = `节点: ${nodeCount} | 边: ${edgeCount}`;
+        statsElement.textContent = t('chat.attack.stats').replace('{0}', nodeCount).replace('{1}', edgeCount);
     }
 }
 
@@ -3377,7 +3377,7 @@ async function regenerateAttackChain() {
     
     const container = document.getElementById('attack-chain-container');
     if (container) {
-        container.innerHTML = '<div class="loading-spinner">重新生成中...</div>';
+        container.innerHTML = '<div class="loading-spinner">' + t('chat.attack.regenerating') + '</div>';
     }
     
     // 禁用重新生成按钮
@@ -3448,7 +3448,7 @@ async function regenerateAttackChain() {
     } catch (error) {
         console.error('重新生成攻击链失败:', error);
         if (container) {
-            container.innerHTML = `<div class="error-message">重新生成失败: ${error.message}</div>`;
+            container.innerHTML = '<div class="error-message">' + t('chat.attack.regen_failed').replace('{0}', error.message) + '</div>';
         }
     } finally {
         setAttackChainLoading(savedConversationId, false);
@@ -3465,7 +3465,7 @@ async function regenerateAttackChain() {
 // 导出攻击链
 function exportAttackChain(format) {
     if (!attackChainCytoscape) {
-        alert('请先加载攻击链');
+        alert(t('chat.attack.no_chain'));
         return;
     }
     
@@ -3497,7 +3497,7 @@ function exportAttackChain(format) {
                             setTimeout(() => URL.revokeObjectURL(url), 100);
                         }).catch(err => {
                             console.error('导出PNG失败:', err);
-                            alert('导出PNG失败: ' + (err.message || '未知错误'));
+                            alert(t('chat.attack.export_failed').replace('{0}', err.message || ''));
                         });
                     } else {
                         // 如果不是 Promise，直接使用
@@ -3512,7 +3512,7 @@ function exportAttackChain(format) {
                     }
                 } catch (err) {
                     console.error('PNG导出错误:', err);
-                    alert('导出PNG失败: ' + (err.message || '未知错误'));
+                    alert(t('chat.attack.export_failed').replace('{0}', err.message || ''));
                 }
             } else if (format === 'svg') {
                 try {
@@ -3821,14 +3821,14 @@ function exportAttackChain(format) {
                     setTimeout(() => URL.revokeObjectURL(url), 100);
                 } catch (err) {
                     console.error('SVG导出错误:', err);
-                    alert('导出SVG失败: ' + (err.message || '未知错误'));
+                    alert(t('chat.attack.export_failed').replace('{0}', err.message || ''));
                 }
             } else {
-                alert('不支持的导出格式: ' + format);
+                alert(t('chat.attack.unsupported').replace('{0}', format));
             }
         } catch (error) {
             console.error('导出失败:', error);
-            alert('导出失败: ' + (error.message || '未知错误'));
+            alert(t('chat.attack.export_failed2').replace('{0}', error.message || ''));
         }
     }, 100); // 小延迟确保图形已渲染
 }
@@ -4166,18 +4166,18 @@ async function showConversationContextMenu(event) {
                 attackChainMenuItem.style.opacity = '0.5';
                 attackChainMenuItem.style.cursor = 'not-allowed';
                 attackChainMenuItem.onclick = null;
-                attackChainMenuItem.title = '当前对话正在执行，请稍后再生成攻击链';
+                attackChainMenuItem.title = t('chat.attack.running');
             } else {
                 attackChainMenuItem.style.opacity = '1';
                 attackChainMenuItem.style.cursor = 'pointer';
                 attackChainMenuItem.onclick = showAttackChainFromContext;
-                attackChainMenuItem.title = '查看当前对话的攻击链';
+                attackChainMenuItem.title = t('chat.attack.view');
             }
         } else {
             attackChainMenuItem.style.opacity = '0.5';
             attackChainMenuItem.style.cursor = 'not-allowed';
             attackChainMenuItem.onclick = null;
-            attackChainMenuItem.title = '请选择一个对话以查看攻击链';
+            attackChainMenuItem.title = t('chat.attack.select_conv');
         }
     }
     
@@ -4211,21 +4211,21 @@ async function showConversationContextMenu(event) {
             // 更新菜单文本
             const pinMenuText = document.getElementById('pin-conversation-menu-text');
             if (pinMenuText) {
-                pinMenuText.textContent = isPinned ? '取消置顶' : '置顶此对话';
+                pinMenuText.textContent = isPinned ? t('chat.pin.unpin_conv') : t('chat.pin.pin_conv');
             }
         } catch (error) {
             console.error('获取对话置顶状态失败:', error);
             // 如果获取失败，使用默认文本
             const pinMenuText = document.getElementById('pin-conversation-menu-text');
             if (pinMenuText) {
-                pinMenuText.textContent = '置顶此对话';
+                pinMenuText.textContent = t('chat.pin.pin_conv');
             }
         }
     } else {
         // 如果没有对话ID，使用默认文本
         const pinMenuText = document.getElementById('pin-conversation-menu-text');
         if (pinMenuText) {
-            pinMenuText.textContent = '置顶此对话';
+            pinMenuText.textContent = t('chat.pin.pin_conv');
         }
     }
 
@@ -4334,14 +4334,14 @@ async function showGroupContextMenu(event, groupId) {
         // 更新菜单文本
         const pinMenuText = document.getElementById('pin-group-menu-text');
         if (pinMenuText) {
-            pinMenuText.textContent = isPinned ? '取消置顶' : '置顶此分组';
+            pinMenuText.textContent = isPinned ? t('chat.pin.unpin_group') : t('chat.pin.pin_group');
         }
     } catch (error) {
         console.error('获取分组置顶状态失败:', error);
         // 如果获取失败，使用默认文本
         const pinMenuText = document.getElementById('pin-group-menu-text');
         if (pinMenuText) {
-            pinMenuText.textContent = '置顶此分组';
+            pinMenuText.textContent = t('chat.pin.pin_group');
         }
     }
 
@@ -4443,7 +4443,7 @@ async function renameConversation() {
         loadConversationsWithGroups();
     } catch (error) {
         console.error('重命名对话失败:', error);
-        alert('重命名失败: ' + (error.message || '未知错误'));
+        alert(t('chat.rename.failed').replace('{0}', error.message || ''));
     }
 
     closeContextMenu();
@@ -4502,7 +4502,7 @@ async function pinConversation() {
         }
     } catch (error) {
         console.error('置顶对话失败:', error);
-        alert('置顶失败: ' + (error.message || '未知错误'));
+        alert(t('chat.pin.failed').replace('{0}', error.message || ''));
     }
 
     closeContextMenu();
@@ -4803,7 +4803,7 @@ async function moveConversationToGroup(convId, groupId) {
         await loadGroups();
     } catch (error) {
         console.error('移动对话到分组失败:', error);
-        alert('移动失败: ' + (error.message || '未知错误'));
+        alert(t('chat.move.failed').replace('{0}', error.message || ''));
     }
 
     closeContextMenu();
@@ -4845,7 +4845,7 @@ async function removeConversationFromGroup(convId, groupId) {
         currentGroupId = savedGroupId;
     } catch (error) {
         console.error('从分组中移除对话失败:', error);
-        alert('移除失败: ' + (error.message || '未知错误'));
+        alert(t('chat.remove.failed').replace('{0}', error.message || ''));
     }
 
     closeContextMenu();
@@ -4917,7 +4917,7 @@ function deleteConversationFromContext() {
     const convId = contextMenuConversationId;
     if (!convId) return;
 
-    if (confirm('确定要删除此对话吗？')) {
+    if (confirm(t('chat.conv.confirm_delete'))) {
         deleteConversation(convId, true); // 跳过内部确认，因为这里已经确认过了
     }
     closeContextMenu();
@@ -5105,11 +5105,11 @@ function toggleSelectAllBatch() {
 async function deleteSelectedConversations() {
     const checkboxes = document.querySelectorAll('.batch-conversation-checkbox:checked');
     if (checkboxes.length === 0) {
-        alert('请先选择要删除的对话');
+        alert(t('chat.conv.no_selected'));
         return;
     }
 
-    if (!confirm(`确定要删除选中的 ${checkboxes.length} 条对话吗？`)) {
+    if (!confirm(t('chat.conv.confirm_delete_selected').replace('{0}', checkboxes.length))) {
         return;
     }
 
@@ -5123,7 +5123,7 @@ async function deleteSelectedConversations() {
         loadConversationsWithGroups();
     } catch (error) {
         console.error('删除失败:', error);
-        alert('删除失败: ' + (error.message || '未知错误'));
+        alert(t('chat.conv.delete_failed').replace('{0}', error.message || ''));
     }
 }
 
@@ -5299,7 +5299,7 @@ async function createGroup(event) {
 
     const name = input.value.trim();
     if (!name) {
-        alert('请输入分组名称');
+        alert(t('chat.group.name_empty'));
         return;
     }
 
@@ -5312,15 +5312,15 @@ async function createGroup(event) {
             const response = await apiFetch('/api/groups');
             groups = await response.json();
         }
-        
+
         // 确保groups是有效数组
         if (!Array.isArray(groups)) {
             groups = [];
         }
-        
+
         const nameExists = groups.some(g => g.name === name);
         if (nameExists) {
-            alert('分组名称已存在，请使用其他名称');
+            alert(t('chat.group.name_exists'));
             return;
         }
     } catch (error) {
@@ -5346,7 +5346,7 @@ async function createGroup(event) {
         if (!response.ok) {
             const error = await response.json();
             if (error.error && error.error.includes('已存在')) {
-                alert('分组名称已存在，请使用其他名称');
+                alert(t('chat.group.name_exists'));
                 return;
             }
             throw new Error(error.error || '创建失败');
@@ -5467,7 +5467,7 @@ async function loadGroupConversations(groupId, searchQuery = '') {
         if (searchQuery) {
             list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">搜索中...</div>';
         } else {
-            list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">加载中...</div>';
+            list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">' + t('chat.attack.loading') + '</div>';
         }
 
         // 构建URL，如果有搜索关键词则添加search参数
@@ -5479,7 +5479,7 @@ async function loadGroupConversations(groupId, searchQuery = '') {
         const response = await apiFetch(url);
         if (!response.ok) {
             console.error(`Failed to load conversations for group ${groupId}:`, response.statusText);
-            list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">加载失败，请重试</div>';
+            list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">' + t('chat.conv.load_failed') + '</div>';
             return;
         }
         
@@ -5493,7 +5493,7 @@ async function loadGroupConversations(groupId, searchQuery = '') {
         // 验证返回的数据类型
         if (!Array.isArray(groupConvs)) {
             console.error(`Invalid response for group ${groupId}:`, groupConvs);
-            list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">数据格式错误</div>';
+            list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">' + t('chat.conv.data_error') + '</div>';
             return;
         }
         
@@ -5518,7 +5518,7 @@ async function loadGroupConversations(groupId, searchQuery = '') {
 
         if (groupConvs.length === 0) {
             if (searchQuery && searchQuery.trim()) {
-                list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">未找到匹配的对话</div>';
+                list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">' + t('chat.conv.no_results') + '</div>';
             } else {
                 list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">该分组暂无对话</div>';
             }
@@ -5672,7 +5672,7 @@ async function editGroup() {
         
         const nameExists = groups.some(g => g.name === trimmedName && g.id !== currentGroupId);
         if (nameExists) {
-            alert('分组名称已存在，请使用其他名称');
+            alert(t('chat.group.name_exists'));
             return;
         }
 
@@ -5690,7 +5690,7 @@ async function editGroup() {
         if (!updateResponse.ok) {
             const error = await updateResponse.json();
             if (error.error && error.error.includes('已存在')) {
-                alert('分组名称已存在，请使用其他名称');
+                alert(t('chat.group.name_exists'));
                 return;
             }
             throw new Error(error.error || '更新失败');
@@ -5712,7 +5712,7 @@ async function editGroup() {
 async function deleteGroup() {
     if (!currentGroupId) return;
 
-    if (!confirm('确定要删除此分组吗？分组中的对话不会被删除，但会从分组中移除。')) {
+    if (!confirm(t('chat.group.confirm_delete'))) {
         return;
     }
 
@@ -5782,7 +5782,7 @@ async function renameGroupFromContext() {
         
         const nameExists = groups.some(g => g.name === trimmedName && g.id !== groupId);
         if (nameExists) {
-            alert('分组名称已存在，请使用其他名称');
+            alert(t('chat.group.name_exists'));
             return;
         }
 
@@ -5800,7 +5800,7 @@ async function renameGroupFromContext() {
         if (!updateResponse.ok) {
             const error = await updateResponse.json();
             if (error.error && error.error.includes('已存在')) {
-                alert('分组名称已存在，请使用其他名称');
+                alert(t('chat.group.name_exists'));
                 return;
             }
             throw new Error(error.error || '更新失败');
@@ -5817,7 +5817,7 @@ async function renameGroupFromContext() {
         }
     } catch (error) {
         console.error('重命名分组失败:', error);
-        alert('重命名失败: ' + (error.message || '未知错误'));
+        alert(t('chat.rename.failed').replace('{0}', error.message || ''));
     }
 
     closeGroupContextMenu();
@@ -5856,7 +5856,7 @@ async function pinGroupFromContext() {
         loadGroups();
     } catch (error) {
         console.error('置顶分组失败:', error);
-        alert('置顶失败: ' + (error.message || '未知错误'));
+        alert(t('chat.pin.failed').replace('{0}', error.message || ''));
     }
 
     closeGroupContextMenu();
@@ -5867,7 +5867,7 @@ async function deleteGroupFromContext() {
     const groupId = contextMenuGroupId;
     if (!groupId) return;
 
-    if (!confirm('确定要删除此分组吗？分组中的对话不会被删除，但会从分组中移除。')) {
+    if (!confirm(t('chat.group.confirm_delete'))) {
         closeGroupContextMenu();
         return;
     }

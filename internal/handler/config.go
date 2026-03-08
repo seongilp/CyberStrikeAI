@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"cyberstrike-ai/internal/config"
+	"cyberstrike-ai/internal/i18n"
 	"cyberstrike-ai/internal/knowledge"
 	"cyberstrike-ai/internal/mcp"
 	"cyberstrike-ai/internal/security"
@@ -697,7 +698,7 @@ func (h *ConfigHandler) UpdateConfig(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "配置已更新"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T("config.message.updated")})
 }
 
 // ApplyConfig 应用配置（重新加载并重启相关服务）
@@ -861,7 +862,7 @@ func (h *ConfigHandler) ApplyConfig(c *gin.Context) {
 	)
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":     "配置已应用",
+		"message":     i18n.T("config.message.applied"),
 		"tools_count": len(h.config.Security.Tools),
 	})
 }

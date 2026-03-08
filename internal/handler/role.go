@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"cyberstrike-ai/internal/config"
+	"cyberstrike-ai/internal/i18n"
 
 	"gopkg.in/yaml.v3"
 
@@ -90,18 +91,18 @@ func (h *RoleHandler) GetRoles(c *gin.Context) {
 func (h *RoleHandler) GetRole(c *gin.Context) {
 	roleName := c.Param("name")
 	if roleName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "角色名称不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("role.error.name_empty")})
 		return
 	}
 
 	if h.config.Roles == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "角色不存在"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T("role.error.not_found")})
 		return
 	}
 
 	role, exists := h.config.Roles[roleName]
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": "角色不存在"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T("role.error.not_found")})
 		return
 	}
 
@@ -119,13 +120,13 @@ func (h *RoleHandler) GetRole(c *gin.Context) {
 func (h *RoleHandler) UpdateRole(c *gin.Context) {
 	roleName := c.Param("name")
 	if roleName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "角色名称不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("role.error.name_empty")})
 		return
 	}
 
 	var req config.RoleConfig
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求参数: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("role.error.invalid_params", err.Error())})
 		return
 	}
 
@@ -203,13 +204,13 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 	// 保存配置到文件
 	if err := h.saveConfig(); err != nil {
 		h.logger.Error("保存配置失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存配置失败: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T("role.error.invalid_params", err.Error())})
 		return
 	}
 
 	h.logger.Info("更新角色", zap.String("oldKey", roleName), zap.String("newKey", finalKey), zap.String("name", req.Name))
 	c.JSON(http.StatusOK, gin.H{
-		"message": "角色已更新",
+		"message": i18n.T("role.message.updated"),
 		"role":    req,
 	})
 }
@@ -218,12 +219,12 @@ func (h *RoleHandler) UpdateRole(c *gin.Context) {
 func (h *RoleHandler) CreateRole(c *gin.Context) {
 	var req config.RoleConfig
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的请求参数: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("role.error.invalid_params", err.Error())})
 		return
 	}
 
 	if req.Name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "角色名称不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("role.error.name_empty")})
 		return
 	}
 
@@ -234,7 +235,7 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 
 	// 检查角色是否已存在
 	if _, exists := h.config.Roles[req.Name]; exists {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "角色已存在"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("role.error.already_exists")})
 		return
 	}
 
@@ -248,13 +249,13 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 	// 保存配置到文件
 	if err := h.saveConfig(); err != nil {
 		h.logger.Error("保存配置失败", zap.Error(err))
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "保存配置失败: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T("role.error.invalid_params", err.Error())})
 		return
 	}
 
 	h.logger.Info("创建角色", zap.String("roleName", req.Name))
 	c.JSON(http.StatusOK, gin.H{
-		"message": "角色已创建",
+		"message": i18n.T("role.message.created"),
 		"role":    req,
 	})
 }
@@ -263,23 +264,23 @@ func (h *RoleHandler) CreateRole(c *gin.Context) {
 func (h *RoleHandler) DeleteRole(c *gin.Context) {
 	roleName := c.Param("name")
 	if roleName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "角色名称不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("role.error.name_empty")})
 		return
 	}
 
 	if h.config.Roles == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "角色不存在"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T("role.error.not_found")})
 		return
 	}
 
 	if _, exists := h.config.Roles[roleName]; !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": "角色不存在"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T("role.error.not_found")})
 		return
 	}
 
 	// 不允许删除"默认"角色
 	if roleName == "默认" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "不能删除默认角色"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("role.error.cannot_delete_default")})
 		return
 	}
 
@@ -322,7 +323,7 @@ func (h *RoleHandler) DeleteRole(c *gin.Context) {
 
 	h.logger.Info("删除角色", zap.String("roleName", roleName))
 	c.JSON(http.StatusOK, gin.H{
-		"message": "角色已删除",
+		"message": i18n.T("role.message.deleted"),
 	})
 }
 

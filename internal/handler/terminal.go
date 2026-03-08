@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"cyberstrike-ai/internal/i18n"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -64,17 +66,17 @@ type RunCommandResponse struct {
 func (h *TerminalHandler) RunCommand(c *gin.Context) {
 	var req RunCommandRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "请求体无效，需要 command 字段"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.invalid_body")})
 		return
 	}
 
 	cmdStr := strings.TrimSpace(req.Command)
 	if cmdStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "command 不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.command_empty")})
 		return
 	}
 	if len(cmdStr) > terminalMaxCommandLen {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "命令过长"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.command_too_long")})
 		return
 	}
 
@@ -102,14 +104,14 @@ func (h *TerminalHandler) RunCommand(c *gin.Context) {
 	if req.Cwd != "" {
 		absCwd, err := filepath.Abs(req.Cwd)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "工作目录无效"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.workdir_invalid")})
 			return
 		}
 		cur, _ := os.Getwd()
 		curAbs, _ := filepath.Abs(cur)
 		rel, err := filepath.Rel(curAbs, absCwd)
 		if err != nil || strings.HasPrefix(rel, "..") || rel == ".." {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "工作目录必须在当前进程目录下"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.workdir_outside")})
 			return
 		}
 		cmd.Dir = absCwd
@@ -190,16 +192,16 @@ type streamEvent struct {
 func (h *TerminalHandler) RunCommandStream(c *gin.Context) {
 	var req RunCommandRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "请求体无效，需要 command 字段"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.invalid_body")})
 		return
 	}
 	cmdStr := strings.TrimSpace(req.Command)
 	if cmdStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "command 不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.command_empty")})
 		return
 	}
 	if len(cmdStr) > terminalMaxCommandLen {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "命令过长"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.command_too_long")})
 		return
 	}
 	shell := req.Shell
@@ -223,14 +225,14 @@ func (h *TerminalHandler) RunCommandStream(c *gin.Context) {
 	if req.Cwd != "" {
 		absCwd, err := filepath.Abs(req.Cwd)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "工作目录无效"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.workdir_invalid")})
 			return
 		}
 		cur, _ := os.Getwd()
 		curAbs, _ := filepath.Abs(cur)
 		rel, err := filepath.Rel(curAbs, absCwd)
 		if err != nil || strings.HasPrefix(rel, "..") || rel == ".." {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "工作目录必须在当前进程目录下"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("terminal.error.workdir_outside")})
 			return
 		}
 		cmd.Dir = absCwd

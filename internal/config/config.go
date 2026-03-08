@@ -14,6 +14,7 @@ import (
 
 type Config struct {
 	Version     string                `yaml:"version,omitempty" json:"version,omitempty"` // 前端显示的版本号，如 v1.3.3
+	Language    string                `yaml:"language,omitempty" json:"language,omitempty"` // UI 语言: cn (中文) | ko (한국어)
 	Server      ServerConfig          `yaml:"server"`
 	Log         LogConfig             `yaml:"log"`
 	MCP         MCPConfig             `yaml:"mcp"`
@@ -364,23 +365,21 @@ func PrintGeneratedPasswordWarning(password string, persisted bool, persistErr s
 	}
 
 	if persisted {
-		fmt.Println("[CyberStrikeAI] ✅ 已为您自动生成并写入 Web 登录密码。")
+		fmt.Println("[CyberStrikeAI] ✅ 웹 로그인 비밀번호가 자동 생성되어 config.yaml에 저장되었습니다.")
 	} else {
 		if persistErr != "" {
-			fmt.Printf("[CyberStrikeAI] ⚠️ 无法自动写入配置文件中的密码: %s\n", persistErr)
+			fmt.Printf("[CyberStrikeAI] ⚠️ 비밀번호를 설정 파일에 자동 저장하지 못했습니다: %s\n", persistErr)
 		} else {
-			fmt.Println("[CyberStrikeAI] ⚠️ 无法自动写入配置文件中的密码。")
+			fmt.Println("[CyberStrikeAI] ⚠️ 비밀번호를 설정 파일에 자동 저장하지 못했습니다.")
 		}
-		fmt.Println("请手动将以下随机密码写入 config.yaml 的 auth.password：")
+		fmt.Println("아래 자동 생성된 비밀번호를 config.yaml 의 auth.password 에 직접 입력해주세요:")
 	}
 
 	fmt.Println("----------------------------------------------------------------")
-	fmt.Println("CyberStrikeAI Auto-Generated Web Password")
-	fmt.Printf("Password: %s\n", password)
-	fmt.Println("WARNING: Anyone with this password can fully control CyberStrikeAI.")
-	fmt.Println("Please store it securely and change it in config.yaml as soon as possible.")
-	fmt.Println("警告：持有此密码的人将拥有对 CyberStrikeAI 的完全控制权限。")
-	fmt.Println("请妥善保管，并尽快在 config.yaml 中修改 auth.password！")
+	fmt.Println("CyberStrikeAI 자동 생성 웹 비밀번호")
+	fmt.Printf("비밀번호: %s\n", password)
+	fmt.Println("경고: 이 비밀번호를 가진 사람은 CyberStrikeAI를 완전히 제어할 수 있습니다.")
+	fmt.Println("안전하게 보관하고 가능한 빨리 config.yaml 에서 auth.password 를 변경하세요.")
 	fmt.Println("----------------------------------------------------------------")
 }
 
@@ -413,7 +412,7 @@ func LoadToolsFromDir(dir string) ([]ToolConfig, error) {
 		tool, err := LoadToolFromFile(filePath)
 		if err != nil {
 			// 记录错误但继续加载其他文件
-			fmt.Printf("警告: 加载工具配置文件 %s 失败: %v\n", filePath, err)
+			fmt.Printf("경고: 도구 설정 파일 로드 실패 %s: %v\n", filePath, err)
 			continue
 		}
 
@@ -475,7 +474,7 @@ func LoadRolesFromDir(dir string) (map[string]RoleConfig, error) {
 		role, err := LoadRoleFromFile(filePath)
 		if err != nil {
 			// 记录错误但继续加载其他文件
-			fmt.Printf("警告: 加载角色配置文件 %s 失败: %v\n", filePath, err)
+			fmt.Printf("경고: 역할 설정 파일 로드 실패 %s: %v\n", filePath, err)
 			continue
 		}
 

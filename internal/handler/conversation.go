@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"cyberstrike-ai/internal/database"
+	"cyberstrike-ai/internal/i18n"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -81,7 +82,7 @@ func (h *ConversationHandler) GetConversation(c *gin.Context) {
 	conv, err := h.db.GetConversation(id)
 	if err != nil {
 		h.logger.Error("获取对话失败", zap.Error(err))
-		c.JSON(http.StatusNotFound, gin.H{"error": "对话不存在"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T("conversation.error.not_found")})
 		return
 	}
 
@@ -104,7 +105,7 @@ func (h *ConversationHandler) UpdateConversation(c *gin.Context) {
 	}
 
 	if req.Title == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "标题不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("conversation.error.title_empty")})
 		return
 	}
 
@@ -135,6 +136,6 @@ func (h *ConversationHandler) DeleteConversation(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T("common.message.deleted")})
 }
 

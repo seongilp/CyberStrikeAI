@@ -123,7 +123,8 @@ async function ensureAuthenticated() {
     return true;
 }
 
-function handleUnauthorized({ message = '认证已过期，请重新登录', silent = false } = {}) {
+function handleUnauthorized({ message = null, silent = false } = {}) {
+    if (message === null) { message = t('auth.error.expired'); }
     clearAuthStorage();
     authPromise = null;
     authPromiseResolvers = [];
@@ -165,7 +166,7 @@ async function submitLogin(event) {
     const password = passwordInput.value.trim();
     if (!password) {
         if (errorBox) {
-            errorBox.textContent = '请输入密码';
+            errorBox.textContent = t('auth.error.password_empty');
             errorBox.style.display = 'block';
         }
         return;
@@ -186,7 +187,7 @@ async function submitLogin(event) {
         const result = await response.json().catch(() => ({}));
         if (!response.ok || !result.token) {
             if (errorBox) {
-                errorBox.textContent = result.error || '登录失败，请检查密码';
+                errorBox.textContent = result.error || t('auth.error.login_failed');
                 errorBox.style.display = 'block';
             }
             return;
@@ -203,7 +204,7 @@ async function submitLogin(event) {
     } catch (error) {
         console.error('登录失败:', error);
         if (errorBox) {
-            errorBox.textContent = '登录失败，请稍后重试';
+            errorBox.textContent = t('auth.error.login_retry');
             errorBox.style.display = 'block';
         }
     } finally {
@@ -231,10 +232,10 @@ async function bootstrapApp() {
 // 通用工具函数
 function getStatusText(status) {
     const statusMap = {
-        'pending': '等待中',
-        'running': '执行中',
-        'completed': '已完成',
-        'failed': '失败'
+        'pending': t('auth.status.pending'),
+        'running': t('auth.status.running'),
+        'completed': t('auth.status.completed'),
+        'failed': t('auth.status.failed')
     };
     return statusMap[status] || status;
 }
@@ -375,7 +376,7 @@ async function logout() {
         // 无论如何都清除本地认证信息
         clearAuthStorage();
         hideLoginOverlay();
-        showLoginOverlay('已退出登录');
+        showLoginOverlay(t('auth.message.logged_out'));
     }
 }
 

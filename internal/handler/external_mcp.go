@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"cyberstrike-ai/internal/config"
+	"cyberstrike-ai/internal/i18n"
 	"cyberstrike-ai/internal/mcp"
 
 	"github.com/gin-gonic/gin"
@@ -86,7 +87,7 @@ func (h *ExternalMCPHandler) GetExternalMCP(c *gin.Context) {
 	configs := h.manager.GetConfigs()
 	cfg, exists := configs[name]
 	if !exists {
-		c.JSON(http.StatusNotFound, gin.H{"error": "外部MCP配置不存在"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T("mcp.error.not_found")})
 		return
 	}
 
@@ -132,7 +133,7 @@ func (h *ExternalMCPHandler) AddOrUpdateExternalMCP(c *gin.Context) {
 
 	name := c.Param("name")
 	if name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "名称不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("mcp.error.name_empty")})
 		return
 	}
 
@@ -197,7 +198,7 @@ func (h *ExternalMCPHandler) AddOrUpdateExternalMCP(c *gin.Context) {
 	}
 
 	h.logger.Info("外部MCP配置已更新", zap.String("name", name))
-	c.JSON(http.StatusOK, gin.H{"message": "配置已更新"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T("mcp.message.updated")})
 }
 
 // DeleteExternalMCP 删除外部MCP配置
@@ -209,7 +210,7 @@ func (h *ExternalMCPHandler) DeleteExternalMCP(c *gin.Context) {
 
 	// 移除配置
 	if err := h.manager.RemoveConfig(name); err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "配置不存在"})
+		c.JSON(http.StatusNotFound, gin.H{"error": i18n.T("mcp.error.config_not_found")})
 		return
 	}
 
@@ -226,7 +227,7 @@ func (h *ExternalMCPHandler) DeleteExternalMCP(c *gin.Context) {
 	}
 
 	h.logger.Info("外部MCP配置已删除", zap.String("name", name))
-	c.JSON(http.StatusOK, gin.H{"message": "配置已删除"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T("mcp.message.deleted")})
 }
 
 // StartExternalMCP 启动外部MCP
@@ -272,7 +273,7 @@ func (h *ExternalMCPHandler) StartExternalMCP(c *gin.Context) {
 	// 立即返回，不等待连接完成
 	// 客户端会在后台异步连接，用户可以通过状态查询接口查看连接状态
 	c.JSON(http.StatusOK, gin.H{
-		"message": "外部MCP启动请求已提交，正在后台连接中",
+		"message": i18n.T("mcp.message.connecting"),
 		"status":  status,
 	})
 }
@@ -306,7 +307,7 @@ func (h *ExternalMCPHandler) StopExternalMCP(c *gin.Context) {
 	}
 
 	h.logger.Info("外部MCP已停止", zap.String("name", name))
-	c.JSON(http.StatusOK, gin.H{"message": "外部MCP已停止"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T("mcp.message.stopped")})
 }
 
 // GetExternalMCPStats 获取统计信息

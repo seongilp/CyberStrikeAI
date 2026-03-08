@@ -83,7 +83,7 @@ function updateCompletedTasksHistory(currentTasks) {
             
             tasksState.completedTasksHistory.push({
                 conversationId: task.conversationId,
-                message: task.message || '未命名任务',
+                message: task.message || t('task.label.unnamed'),
                 startedAt: task.startedAt,
                 status: finalStatus,
                 completedAt: new Date().toISOString()
@@ -106,7 +106,7 @@ async function loadTasks() {
     const listContainer = document.getElementById('tasks-list');
     if (!listContainer) return;
     
-    listContainer.innerHTML = '<div class="loading-spinner">加载中...</div>';
+    listContainer.innerHTML = '<div class="loading-spinner">' + t('ui.status.loading') + '</div>';
 
     try {
         // 并行加载运行中的任务和已完成的任务历史
@@ -149,7 +149,7 @@ async function loadTasks() {
             tasksState.completedTasksHistory = [
                 ...completedTasks.map(t => ({
                     conversationId: t.conversationId,
-                    message: t.message || '未命名任务',
+                    message: t.message || t('task.label.unnamed'),
                     startedAt: t.startedAt,
                     status: t.status || 'completed',
                     completedAt: t.completedAt || new Date().toISOString()
@@ -359,12 +359,12 @@ function renderTasks(tasks) {
 
     // 状态映射
     const statusMap = {
-        'running': { text: '执行中', class: 'task-status-running' },
-        'cancelling': { text: '取消中', class: 'task-status-cancelling' },
-        'failed': { text: '执行失败', class: 'task-status-failed' },
-        'timeout': { text: '执行超时', class: 'task-status-timeout' },
-        'cancelled': { text: '已取消', class: 'task-status-cancelled' },
-        'completed': { text: '已完成', class: 'task-status-completed' }
+        'running': { text: t('task.status.running'), class: 'task-status-running' },
+        'cancelling': { text: t('task.status.cancelling'), class: 'task-status-cancelling' },
+        'failed': { text: t('task.status.failed'), class: 'task-status-failed' },
+        'timeout': { text: t('task.status.timeout'), class: 'task-status-timeout' },
+        'cancelled': { text: t('task.status.cancelled'), class: 'task-status-cancelled' },
+        'completed': { text: t('task.status.completed'), class: 'task-status-completed' }
     };
 
     // 分离当前任务和历史任务
@@ -382,8 +382,8 @@ function renderTasks(tasks) {
     if (historyTasks.length > 0) {
         html += `<div class="tasks-history-section">
             <div class="tasks-history-header">
-                <span class="tasks-history-title">📜 最近完成的任务（最近24小时）</span>
-                <button class="btn-secondary btn-small" onclick="clearTasksHistory()">清空历史</button>
+                <span class="tasks-history-title">${t('task.label.recent')}</span>
+                <button class="btn-secondary btn-small" onclick="clearTasksHistory()">${t('task.btn.clear_history')}</button>
             </div>
             ${historyTasks.map(task => renderTaskItem(task, statusMap, true)).join('')}
         </div>`;
@@ -406,7 +406,7 @@ function renderTaskItem(task, statusMap, isHistory = false) {
             minute: '2-digit',
             second: '2-digit'
         })
-        : '未知时间';
+        : t('ui.empty.no_data');
     
     const completedText = completedTime && !isNaN(completedTime.getTime())
         ? completedTime.toLocaleString('zh-CN', { 
@@ -439,20 +439,20 @@ function renderTaskItem(task, statusMap, isHistory = false) {
                     ` : '<div class="task-checkbox-placeholder"></div>'}
                     <span class="task-status ${status.class}">${status.text}</span>
                     ${isHistory ? '<span class="task-history-badge" title="历史记录">📜</span>' : ''}
-                    <span class="task-message" title="${escapeHtml(task.message || '未命名任务')}">${escapeHtml(task.message || '未命名任务')}</span>
+                    <span class="task-message" title="${escapeHtml(task.message || t('task.label.unnamed'))}">${escapeHtml(task.message || t('task.label.unnamed'))}</span>
                 </div>
                 <div class="task-actions">
                     ${duration ? `<span class="task-duration" title="执行时长">⏱ ${duration}</span>` : ''}
                     <span class="task-time" title="${isHistory && completedText ? '完成时间' : '开始时间'}">
                         ${isHistory && completedText ? completedText : timeText}
                     </span>
-                    ${canCancel ? `<button class="btn-secondary btn-small" onclick="cancelTask('${task.conversationId}', this)">取消任务</button>` : ''}
+                    ${canCancel ? `<button class="btn-secondary btn-small" onclick="cancelTask('${task.conversationId}', this)">${t('ui.btn.cancel')}</button>` : ''}
                     ${task.conversationId ? `<button class="btn-secondary btn-small" onclick="viewConversation('${task.conversationId}')">查看对话</button>` : ''}
                 </div>
             </div>
             ${task.conversationId ? `
                 <div class="task-details">
-                    <span class="task-id-label">对话ID:</span>
+                    <span class="task-id-label">${t('task.label.conv_id')}</span>
                     <span class="task-id-value" title="点击复制" onclick="copyTaskId('${task.conversationId}')">${escapeHtml(task.conversationId)}</span>
                 </div>
             ` : ''}
@@ -462,7 +462,7 @@ function renderTaskItem(task, statusMap, isHistory = false) {
 
 // 清空任务历史
 function clearTasksHistory() {
-    if (!confirm('确定要清空所有任务历史记录吗？')) {
+    if (!confirm(t('task.confirm.clear_history'))) {
         return;
     }
     tasksState.completedTasksHistory = [];
@@ -509,7 +509,7 @@ async function batchCancelTasks() {
     const selected = Array.from(tasksState.selectedTasks);
     if (selected.length === 0) return;
     
-    if (!confirm(`确定要取消 ${selected.length} 个任务吗？`)) {
+    if (!confirm(t('task.confirm.cancel_selected').replace('{0}', selected.length))) {
         return;
     }
     
@@ -545,9 +545,9 @@ async function batchCancelTasks() {
     
     // 显示结果
     if (failCount > 0) {
-        alert(`批量取消完成：成功 ${successCount} 个，失败 ${failCount} 个`);
+        alert(t('task.alert.cancel_result').replace('{0}', successCount).replace('{1}', failCount));
     } else {
-        alert(`成功取消 ${successCount} 个任务`);
+        alert(t('task.alert.cancel_success').replace('{0}', successCount));
     }
 }
 
@@ -571,7 +571,7 @@ async function cancelTask(conversationId, button) {
     
     const originalText = button.textContent;
     button.disabled = true;
-    button.textContent = '取消中...';
+    button.textContent = t('task.status.cancelling') + '...';
 
     try {
         const response = await apiFetch('/api/agent-loop/cancel', {
@@ -738,7 +738,7 @@ async function showBatchImportModal() {
             try {
                 const loadedRoles = await loadRoles();
                 // 清空现有选项（除了默认选项）
-                roleSelect.innerHTML = '<option value="">默认</option>';
+                roleSelect.innerHTML = '<option value="">' + t('task.role.default') + '</option>';
                 
                 // 添加已启用的角色
                 const sortedRoles = loadedRoles.sort((a, b) => {
@@ -808,14 +808,14 @@ async function createBatchQueue() {
     
     const text = input.value.trim();
     if (!text) {
-        alert('请输入至少一个任务');
+        alert(t('task.alert.empty_input'));
         return;
     }
     
     // 按行分割任务
     const tasks = text.split('\n').map(line => line.trim()).filter(line => line !== '');
     if (tasks.length === 0) {
-        alert('没有有效的任务');
+        alert(t('task.alert.no_valid'));
         return;
     }
     
@@ -964,7 +964,7 @@ function renderBatchQueues() {
     const queues = batchQueuesState.queues;
     
     if (queues.length === 0) {
-        list.innerHTML = '<div class="tasks-empty"><p>当前没有批量任务队列</p></div>';
+        list.innerHTML = '<div class="tasks-empty"><p>' + t('task.no_data') + '</p></div>';
         if (pagination) pagination.style.display = 'none';
         return;
     }
@@ -976,11 +976,11 @@ function renderBatchQueues() {
     
     list.innerHTML = queues.map(queue => {
         const statusMap = {
-            'pending': { text: '待执行', class: 'batch-queue-status-pending' },
-            'running': { text: '执行中', class: 'batch-queue-status-running' },
-            'paused': { text: '已暂停', class: 'batch-queue-status-paused' },
-            'completed': { text: '已完成', class: 'batch-queue-status-completed' },
-            'cancelled': { text: '已取消', class: 'batch-queue-status-cancelled' }
+            'pending': { text: t('task.queue.status.pending'), class: 'batch-queue-status-pending' },
+            'running': { text: t('task.queue.status.running'), class: 'batch-queue-status-running' },
+            'paused': { text: t('task.queue.status.paused'), class: 'batch-queue-status-paused' },
+            'completed': { text: t('task.queue.status.completed'), class: 'batch-queue-status-completed' },
+            'cancelled': { text: t('task.queue.status.cancelled'), class: 'batch-queue-status-cancelled' }
         };
         
         const status = statusMap[queue.status] || { text: queue.status, class: 'batch-queue-status-unknown' };
@@ -1012,8 +1012,8 @@ function renderBatchQueues() {
         // 显示角色信息（使用正确的角色图标）
         const loadedRoles = batchQueuesState.loadedRoles || [];
         const roleIcon = getRoleIconForDisplay(queue.role, loadedRoles);
-        const roleName = queue.role && queue.role !== '' ? queue.role : '默认';
-        const roleDisplay = `<span class="batch-queue-role" style="margin-right: 8px;" title="角色: ${escapeHtml(roleName)}">${roleIcon} ${escapeHtml(roleName)}</span>`;
+        const roleName = queue.role && queue.role !== '' ? queue.role : t('task.label.role');
+        const roleDisplay = `<span class="batch-queue-role" style="margin-right: 8px;" title="${t('task.label.role')}: ${escapeHtml(roleName)}">${roleIcon} ${escapeHtml(roleName)}</span>`;
         
         return `
             <div class="batch-queue-item" data-queue-id="${queue.id}" onclick="showBatchQueueDetail('${queue.id}')">
@@ -1022,8 +1022,8 @@ function renderBatchQueues() {
                         ${titleDisplay}
                         ${roleDisplay}
                         <span class="batch-queue-status ${status.class}">${status.text}</span>
-                        <span class="batch-queue-id">队列ID: ${escapeHtml(queue.id)}</span>
-                        <span class="batch-queue-time">创建时间: ${new Date(queue.createdAt).toLocaleString('zh-CN')}</span>
+                        <span class="batch-queue-id">${t('task.label.queue_id')} ${escapeHtml(queue.id)}</span>
+                        <span class="batch-queue-time">${t('task.label.created_at')} ${new Date(queue.createdAt).toLocaleString('zh-CN')}</span>
                     </div>
                     <div class="batch-queue-progress">
                         <div class="batch-queue-progress-bar">
@@ -1198,7 +1198,7 @@ async function showBatchQueueDetail(queueId) {
         
         if (title) {
             // textContent 本身会做转义；这里不要再 escapeHtml，否则会把 && 显示成 &amp;...（看起来像“变形/乱码”）
-            title.textContent = queue.title ? `批量任务队列 - ${String(queue.title)}` : '批量任务队列';
+            title.textContent = queue.title ? `${t('task.title')} - ${String(queue.title)}` : t('task.title');
         }
         
         // 更新按钮显示
@@ -1226,20 +1226,20 @@ async function showBatchQueueDetail(queueId) {
         
         // 队列状态映射
         const queueStatusMap = {
-            'pending': { text: '待执行', class: 'batch-queue-status-pending' },
-            'running': { text: '执行中', class: 'batch-queue-status-running' },
-            'paused': { text: '已暂停', class: 'batch-queue-status-paused' },
-            'completed': { text: '已完成', class: 'batch-queue-status-completed' },
-            'cancelled': { text: '已取消', class: 'batch-queue-status-cancelled' }
+            'pending': { text: t('task.queue.status.pending'), class: 'batch-queue-status-pending' },
+            'running': { text: t('task.queue.status.running'), class: 'batch-queue-status-running' },
+            'paused': { text: t('task.queue.status.paused'), class: 'batch-queue-status-paused' },
+            'completed': { text: t('task.queue.status.completed'), class: 'batch-queue-status-completed' },
+            'cancelled': { text: t('task.queue.status.cancelled'), class: 'batch-queue-status-cancelled' }
         };
-        
+
         // 任务状态映射
         const taskStatusMap = {
-            'pending': { text: '待执行', class: 'batch-task-status-pending' },
-            'running': { text: '执行中', class: 'batch-task-status-running' },
-            'completed': { text: '已完成', class: 'batch-task-status-completed' },
-            'failed': { text: '失败', class: 'batch-task-status-failed' },
-            'cancelled': { text: '已取消', class: 'batch-task-status-cancelled' }
+            'pending': { text: t('task.queue.status.pending'), class: 'batch-task-status-pending' },
+            'running': { text: t('task.queue.status.running'), class: 'batch-task-status-running' },
+            'completed': { text: t('task.queue.status.completed'), class: 'batch-task-status-completed' },
+            'failed': { text: t('task.status.failed'), class: 'batch-task-status-failed' },
+            'cancelled': { text: t('task.queue.status.cancelled'), class: 'batch-task-status-cancelled' }
         };
         
         // 获取角色信息（如果队列有角色配置）
@@ -1266,26 +1266,26 @@ async function showBatchQueueDetail(queueId) {
                 }
             }
             roleDisplay = `<div class="detail-item">
-                <span class="detail-label">角色</span>
+                <span class="detail-label">${t('task.label.role')}</span>
                 <span class="detail-value">${roleIcon} ${escapeHtml(roleName)}</span>
             </div>`;
         } else {
             // 默认角色
             roleDisplay = `<div class="detail-item">
-                <span class="detail-label">角色</span>
-                <span class="detail-value">🔵 默认</span>
+                <span class="detail-label">${t('task.label.role')}</span>
+                <span class="detail-value">🔵 ${t('task.label.role')}</span>
             </div>`;
         }
         
         content.innerHTML = `
             <div class="batch-queue-detail-info">
                 ${queue.title ? `<div class="detail-item">
-                    <span class="detail-label">任务标题</span>
+                    <span class="detail-label">${t('task.title')}</span>
                     <span class="detail-value">${escapeHtml(queue.title)}</span>
                 </div>` : ''}
                 ${roleDisplay}
                 <div class="detail-item">
-                    <span class="detail-label">队列ID</span>
+                    <span class="detail-label">${t('task.label.queue_id')}</span>
                     <span class="detail-value"><code>${escapeHtml(queue.id)}</code></span>
                 </div>
                 <div class="detail-item">
@@ -1293,7 +1293,7 @@ async function showBatchQueueDetail(queueId) {
                     <span class="detail-value"><span class="batch-queue-status ${queueStatusMap[queue.status]?.class || ''}">${queueStatusMap[queue.status]?.text || queue.status}</span></span>
                 </div>
                 <div class="detail-item">
-                    <span class="detail-label">创建时间</span>
+                    <span class="detail-label">${t('task.label.created_at')}</span>
                     <span class="detail-value">${new Date(queue.createdAt).toLocaleString('zh-CN')}</span>
                 </div>
                 ${queue.startedAt ? `<div class="detail-item">
@@ -1305,12 +1305,12 @@ async function showBatchQueueDetail(queueId) {
                     <span class="detail-value">${new Date(queue.completedAt).toLocaleString('zh-CN')}</span>
                 </div>` : ''}
                 <div class="detail-item">
-                    <span class="detail-label">任务总数</span>
+                    <span class="detail-label">${t('task.label.task_list')}</span>
                     <span class="detail-value">${queue.tasks.length}</span>
                 </div>
             </div>
             <div class="batch-queue-tasks-list">
-                <h4>任务列表</h4>
+                <h4>${t('task.label.task_list')}</h4>
                 ${queue.tasks.map((task, index) => {
                     const taskStatus = taskStatusMap[task.status] || { text: task.status, class: 'batch-task-status-unknown' };
                     const canEdit = queue.status === 'pending' && task.status === 'pending';
@@ -1376,7 +1376,7 @@ async function pauseBatchQueue() {
     const queueId = batchQueuesState.currentQueueId;
     if (!queueId) return;
     
-    if (!confirm('确定要暂停这个批量任务队列吗？当前正在执行的任务将被停止，后续任务将保留待执行状态。')) {
+    if (!confirm(t('task.confirm.pause_queue'))) {
         return;
     }
     
@@ -1404,7 +1404,7 @@ async function deleteBatchQueue() {
     const queueId = batchQueuesState.currentQueueId;
     if (!queueId) return;
     
-    if (!confirm('确定要删除这个批量任务队列吗？此操作不可恢复。')) {
+    if (!confirm(t('task.confirm.delete_queue'))) {
         return;
     }
     
@@ -1430,7 +1430,7 @@ async function deleteBatchQueue() {
 async function deleteBatchQueueFromList(queueId) {
     if (!queueId) return;
     
-    if (!confirm('确定要删除这个批量任务队列吗？此操作不可恢复。')) {
+    if (!confirm(t('task.confirm.delete_queue'))) {
         return;
     }
     
@@ -1599,7 +1599,7 @@ async function saveBatchTask() {
     const messageInput = document.getElementById('edit-task-message');
     
     if (!queueId || !taskId) {
-        alert('任务信息不完整');
+        alert(t('task.alert.incomplete'));
         return;
     }
     
@@ -1610,7 +1610,7 @@ async function saveBatchTask() {
     
     const message = messageInput.value.trim();
     if (!message) {
-        alert('任务消息不能为空');
+        alert(t('task.alert.message_empty'));
         return;
     }
     
@@ -1717,7 +1717,7 @@ async function saveAddBatchTask() {
     
     const message = messageInput.value.trim();
     if (!message) {
-        alert('任务消息不能为空');
+        alert(t('task.alert.message_empty'));
         return;
     }
     
@@ -1779,7 +1779,7 @@ function deleteBatchTaskFromElement(button) {
         ? decodedMessage.substring(0, 50) + '...' 
         : decodedMessage;
     
-    if (!confirm(`确定要删除这个任务吗？\n\n任务内容: ${displayMessage}\n\n此操作不可恢复。`)) {
+    if (!confirm(t('task.confirm.delete_task'))) {
         return;
     }
     
@@ -1789,7 +1789,7 @@ function deleteBatchTaskFromElement(button) {
 // 删除批量任务
 async function deleteBatchTask(queueId, taskId) {
     if (!queueId || !taskId) {
-        alert('任务信息不完整');
+        alert(t('task.alert.incomplete'));
         return;
     }
     

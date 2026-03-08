@@ -93,8 +93,8 @@ function renderSkillsList() {
     const filteredSkills = skillsList;
 
     if (filteredSkills.length === 0) {
-        skillsListEl.innerHTML = '<div class="empty-state">' + 
-            (skillsSearchKeyword ? '没有找到匹配的skills' : '暂无skills，点击"创建Skill"创建第一个skill') + 
+        skillsListEl.innerHTML = '<div class="empty-state">' +
+            (skillsSearchKeyword ? t('skill.label.no_results') : t('skill.label.no_skills')) +
             '</div>';
         // 搜索时隐藏分页
         const paginationContainer = document.getElementById('skills-pagination');
@@ -112,9 +112,9 @@ function renderSkillsList() {
                     <div class="skill-card-description">${escapeHtml(skill.description || '无描述')}</div>
                 </div>
                 <div class="skill-card-actions">
-                    <button class="btn-secondary btn-small" onclick="viewSkill('${escapeHtml(skill.name)}')">查看</button>
-                    <button class="btn-secondary btn-small" onclick="editSkill('${escapeHtml(skill.name)}')">编辑</button>
-                    <button class="btn-secondary btn-small btn-danger" onclick="deleteSkill('${escapeHtml(skill.name)}')">删除</button>
+                    <button class="btn-secondary btn-small" onclick="viewSkill('${escapeHtml(skill.name)}')">${t('skill.btn.view')}</button>
+                    <button class="btn-secondary btn-small" onclick="editSkill('${escapeHtml(skill.name)}')">${t('skill.btn.edit')}</button>
+                    <button class="btn-secondary btn-small btn-danger" onclick="deleteSkill('${escapeHtml(skill.name)}')">${t('ui.btn.delete')}</button>
                 </div>
             </div>
         `;
@@ -157,9 +157,9 @@ function renderSkillsPagination() {
     // 左侧：显示范围信息和每页数量选择器（参考MCP样式）
     paginationHTML += `
         <div class="pagination-info">
-            <span>显示 ${start}-${end} / 共 ${total} 条</span>
+            <span>${t('ui.pagination.showing').replace('{0}', start).replace('{1}', end).replace('{2}', total)}</span>
             <label class="pagination-page-size">
-                每页显示
+                ${t('ui.pagination.per_page')}
                 <select id="skills-page-size-pagination" onchange="changeSkillsPageSize()">
                     <option value="10" ${pageSize === 10 ? 'selected' : ''}>10</option>
                     <option value="20" ${pageSize === 20 ? 'selected' : ''}>20</option>
@@ -173,11 +173,11 @@ function renderSkillsPagination() {
     // 右侧：分页按钮（参考MCP样式：首页、上一页、第X/Y页、下一页、末页）
     paginationHTML += `
         <div class="pagination-controls">
-            <button class="btn-secondary" onclick="loadSkills(1, ${pageSize})" ${currentPage === 1 || total === 0 ? 'disabled' : ''}>首页</button>
-            <button class="btn-secondary" onclick="loadSkills(${currentPage - 1}, ${pageSize})" ${currentPage === 1 || total === 0 ? 'disabled' : ''}>上一页</button>
-            <span class="pagination-page">第 ${currentPage} / ${totalPages || 1} 页</span>
-            <button class="btn-secondary" onclick="loadSkills(${currentPage + 1}, ${pageSize})" ${currentPage >= totalPages || total === 0 ? 'disabled' : ''}>下一页</button>
-            <button class="btn-secondary" onclick="loadSkills(${totalPages || 1}, ${pageSize})" ${currentPage >= totalPages || total === 0 ? 'disabled' : ''}>末页</button>
+            <button class="btn-secondary" onclick="loadSkills(1, ${pageSize})" ${currentPage === 1 || total === 0 ? 'disabled' : ''}>${t('ui.pagination.first')}</button>
+            <button class="btn-secondary" onclick="loadSkills(${currentPage - 1}, ${pageSize})" ${currentPage === 1 || total === 0 ? 'disabled' : ''}>${t('ui.pagination.prev')}</button>
+            <span class="pagination-page">${t('ui.pagination.page').replace('{0}', currentPage).replace('{1}', totalPages || 1)}</span>
+            <button class="btn-secondary" onclick="loadSkills(${currentPage + 1}, ${pageSize})" ${currentPage >= totalPages || total === 0 ? 'disabled' : ''}>${t('ui.pagination.next')}</button>
+            <button class="btn-secondary" onclick="loadSkills(${totalPages || 1}, ${pageSize})" ${currentPage >= totalPages || total === 0 ? 'disabled' : ''}>${t('ui.pagination.last')}</button>
         </div>
     `;
     
@@ -340,7 +340,7 @@ function showAddSkillModal() {
     const modal = document.getElementById('skill-modal');
     if (!modal) return;
 
-    document.getElementById('skill-modal-title').textContent = '添加Skill';
+    document.getElementById('skill-modal-title').textContent = t('skill.modal.add');
     document.getElementById('skill-name').value = '';
     document.getElementById('skill-name').disabled = false;
     document.getElementById('skill-description').value = '';
@@ -362,7 +362,7 @@ async function editSkill(skillName) {
         const modal = document.getElementById('skill-modal');
         if (!modal) return;
 
-        document.getElementById('skill-modal-title').textContent = '编辑Skill';
+        document.getElementById('skill-modal-title').textContent = t('skill.modal.edit');
         document.getElementById('skill-name').value = skill.name;
         document.getElementById('skill-name').disabled = true; // 编辑时不允许修改名称
         document.getElementById('skill-description').value = skill.description || '';
@@ -393,19 +393,19 @@ async function viewSkill(skillName) {
         modal.innerHTML = `
             <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
                 <div class="modal-header">
-                    <h2>查看Skill: ${escapeHtml(skill.name)}</h2>
+                    <h2>${t('skill.modal.view').replace('{0}', escapeHtml(skill.name))}</h2>
                     <span class="modal-close" onclick="closeSkillViewModal()">&times;</span>
                 </div>
                 <div class="modal-body" style="overflow-y: auto; max-height: calc(90vh - 120px);">
-                    ${skill.description ? `<div style="margin-bottom: 16px;"><strong>描述:</strong> ${escapeHtml(skill.description)}</div>` : ''}
-                    <div style="margin-bottom: 8px;"><strong>路径:</strong> ${escapeHtml(skill.path || '')}</div>
-                    <div style="margin-bottom: 16px;"><strong>修改时间:</strong> ${escapeHtml(skill.mod_time || '')}</div>
-                    <div style="margin-bottom: 8px;"><strong>内容:</strong></div>
+                    ${skill.description ? `<div style="margin-bottom: 16px;"><strong>${t('skill.label.description')}</strong> ${escapeHtml(skill.description)}</div>` : ''}
+                    <div style="margin-bottom: 8px;"><strong>${t('skill.label.path')}</strong> ${escapeHtml(skill.path || '')}</div>
+                    <div style="margin-bottom: 16px;"><strong>${t('skill.label.mod_time')}</strong> ${escapeHtml(skill.mod_time || '')}</div>
+                    <div style="margin-bottom: 8px;"><strong>${t('skill.label.content')}</strong></div>
                     <pre style="background: #f5f5f5; padding: 16px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; word-wrap: break-word;">${escapeHtml(skill.content || '')}</pre>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn-secondary" onclick="closeSkillViewModal()">关闭</button>
-                    <button class="btn-primary" onclick="editSkill('${escapeHtml(skill.name)}'); closeSkillViewModal();">编辑</button>
+                    <button class="btn-secondary" onclick="closeSkillViewModal()">${t('ui.btn.close')}</button>
+                    <button class="btn-primary" onclick="editSkill('${escapeHtml(skill.name)}'); closeSkillViewModal();">${t('skill.btn.edit')}</button>
                 </div>
             </div>
         `;
@@ -443,18 +443,18 @@ async function saveSkill() {
     const content = document.getElementById('skill-content').value.trim();
 
     if (!name) {
-        showNotification('skill名称不能为空', 'error');
+        showNotification(t('skill.error.name_empty'), 'error');
         return;
     }
 
     if (!content) {
-        showNotification('skill内容不能为空', 'error');
+        showNotification(t('skill.error.content_empty'), 'error');
         return;
     }
 
     // 验证skill名称
     if (!/^[a-zA-Z0-9_-]+$/.test(name)) {
-        showNotification('skill名称只能包含字母、数字、连字符和下划线', 'error');
+        showNotification(t('skill.error.name_invalid'), 'error');
         return;
     }
 
@@ -462,7 +462,7 @@ async function saveSkill() {
     const saveBtn = document.querySelector('#skill-modal .btn-primary');
     if (saveBtn) {
         saveBtn.disabled = true;
-        saveBtn.textContent = '保存中...';
+        saveBtn.textContent = t('ui.status.loading');
     }
 
     try {
@@ -487,7 +487,7 @@ async function saveSkill() {
             throw new Error(error.error || '保存skill失败');
         }
 
-        showNotification(isEdit ? 'skill已更新' : 'skill已创建', 'success');
+        showNotification(isEdit ? t('skill.message.updated') : t('skill.message.created'), 'success');
         closeSkillModal();
         await loadSkills(skillsPagination.currentPage, skillsPagination.pageSize);
     } catch (error) {
@@ -497,7 +497,7 @@ async function saveSkill() {
         isSavingSkill = false;
         if (saveBtn) {
             saveBtn.disabled = false;
-            saveBtn.textContent = '保存';
+            saveBtn.textContent = t('ui.btn.save');
         }
     }
 }
@@ -518,10 +518,10 @@ async function deleteSkill(skillName) {
     }
 
     // 构建确认消息
-    let confirmMessage = `确定要删除skill "${skillName}" 吗？此操作不可恢复。`;
+    let confirmMessage = t('skill.confirm.delete').replace('{0}', skillName);
     if (boundRoles.length > 0) {
         const rolesList = boundRoles.join('、');
-        confirmMessage = `确定要删除skill "${skillName}" 吗？\n\n⚠️ 该skill当前已被以下 ${boundRoles.length} 个角色绑定：\n${rolesList}\n\n删除后，系统将自动从这些角色中移除该skill的绑定。\n\n此操作不可恢复，是否继续？`;
+        confirmMessage = t('skill.confirm.delete').replace('{0}', skillName) + '\n\n' + t('skill.confirm.delete_bound').replace('{0}', boundRoles.length) + '：\n' + rolesList + '\n\n删除后，系统将自动从这些角色中移除该skill的绑定。\n\n此操作不可恢复，是否继续？';
     }
 
     if (!confirm(confirmMessage)) {
@@ -539,10 +539,10 @@ async function deleteSkill(skillName) {
         }
 
         const data = await response.json();
-        let successMessage = 'skill已删除';
+        let successMessage = t('skill.message.deleted');
         if (data.affected_roles && data.affected_roles.length > 0) {
             const rolesList = data.affected_roles.join('、');
-            successMessage = `skill已删除，已自动从 ${data.affected_roles.length} 个角色中移除绑定：${rolesList}`;
+            successMessage = `${t('skill.message.deleted')}，已自动从 ${data.affected_roles.length} 个角色中移除绑定：${rolesList}`;
         }
         showNotification(successMessage, 'success');
         
@@ -604,23 +604,23 @@ function renderSkillsMonitor() {
         
         statsEl.innerHTML = `
             <div class="monitor-stat-card">
-                <div class="monitor-stat-label">总Skills数</div>
+                <div class="monitor-stat-label">${t('skill.stats.total')}</div>
                 <div class="monitor-stat-value">${skillsStats.total}</div>
             </div>
             <div class="monitor-stat-card">
-                <div class="monitor-stat-label">总调用次数</div>
+                <div class="monitor-stat-label">${t('skill.stats.total_calls')}</div>
                 <div class="monitor-stat-value">${skillsStats.totalCalls}</div>
             </div>
             <div class="monitor-stat-card">
-                <div class="monitor-stat-label">成功调用</div>
+                <div class="monitor-stat-label">${t('skill.stats.success')}</div>
                 <div class="monitor-stat-value" style="color: #28a745;">${skillsStats.totalSuccess}</div>
             </div>
             <div class="monitor-stat-card">
-                <div class="monitor-stat-label">失败调用</div>
+                <div class="monitor-stat-label">${t('skill.stats.failed')}</div>
                 <div class="monitor-stat-value" style="color: #dc3545;">${skillsStats.totalFailed}</div>
             </div>
             <div class="monitor-stat-card">
-                <div class="monitor-stat-label">成功率</div>
+                <div class="monitor-stat-label">${t('skill.stats.rate')}</div>
                 <div class="monitor-stat-value">${successRate}%</div>
             </div>
         `;
@@ -634,7 +634,7 @@ function renderSkillsMonitor() {
     
     // 如果没有统计数据，显示空状态
     if (stats.length === 0) {
-        monitorListEl.innerHTML = '<div class="monitor-empty">暂无Skills调用记录</div>';
+        monitorListEl.innerHTML = '<div class="monitor-empty">' + t('skill.no_data') + '</div>';
         return;
     }
 
@@ -652,12 +652,12 @@ function renderSkillsMonitor() {
         <table class="monitor-table">
             <thead>
                 <tr>
-                    <th style="text-align: left !important;">Skill名称</th>
-                    <th style="text-align: center;">总调用</th>
-                    <th style="text-align: center;">成功</th>
-                    <th style="text-align: center;">失败</th>
-                    <th style="text-align: center;">成功率</th>
-                    <th style="text-align: left;">最后调用时间</th>
+                    <th style="text-align: left !important;">${t('skill.stats.col_name')}</th>
+                    <th style="text-align: center;">${t('skill.stats.col_total')}</th>
+                    <th style="text-align: center;">${t('skill.stats.col_success')}</th>
+                    <th style="text-align: center;">${t('skill.stats.col_failed')}</th>
+                    <th style="text-align: center;">${t('skill.stats.col_rate')}</th>
+                    <th style="text-align: left;">${t('skill.stats.col_last')}</th>
                 </tr>
             </thead>
             <tbody>
@@ -692,7 +692,7 @@ async function refreshSkillsMonitor() {
 
 // 清空skills统计数据
 async function clearSkillsStats() {
-    if (!confirm('确定要清空所有Skills统计数据吗？此操作不可恢复。')) {
+    if (!confirm(t('skill.confirm.clear_stats'))) {
         return;
     }
 
@@ -706,7 +706,7 @@ async function clearSkillsStats() {
             throw new Error(error.error || '清空统计数据失败');
         }
 
-        showNotification('已清空所有Skills统计数据', 'success');
+        showNotification(t('skill.message.stats_cleared'), 'success');
         // 重新加载统计数据
         await loadSkillsMonitor();
     } catch (error) {

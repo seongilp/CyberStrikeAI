@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"cyberstrike-ai/internal/database"
+	"cyberstrike-ai/internal/i18n"
 	"cyberstrike-ai/internal/mcp"
 	"cyberstrike-ai/internal/security"
 	"github.com/gin-gonic/gin"
@@ -243,7 +244,7 @@ func (h *MonitorHandler) GetExecution(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusNotFound, gin.H{"error": "执行记录未找到"})
+	c.JSON(http.StatusNotFound, gin.H{"error": i18n.T("monitor.error.not_found")})
 }
 
 // GetStats 获取统计信息
@@ -256,7 +257,7 @@ func (h *MonitorHandler) GetStats(c *gin.Context) {
 func (h *MonitorHandler) DeleteExecution(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "执行记录ID不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("monitor.error.id_empty")})
 		return
 	}
 
@@ -267,7 +268,7 @@ func (h *MonitorHandler) DeleteExecution(c *gin.Context) {
 		if err != nil {
 			// 如果找不到记录，可能已经被删除，直接返回成功
 			h.logger.Warn("执行记录不存在，可能已被删除", zap.String("executionId", id), zap.Error(err))
-			c.JSON(http.StatusOK, gin.H{"message": "执行记录不存在或已被删除"})
+			c.JSON(http.StatusOK, gin.H{"message": i18n.T("monitor.message.already_deleted")})
 			return
 		}
 
@@ -297,14 +298,14 @@ func (h *MonitorHandler) DeleteExecution(c *gin.Context) {
 		}
 
 		h.logger.Info("执行记录已从数据库删除", zap.String("executionId", id), zap.String("toolName", exec.ToolName))
-		c.JSON(http.StatusOK, gin.H{"message": "执行记录已删除"})
+		c.JSON(http.StatusOK, gin.H{"message": i18n.T("monitor.message.deleted")})
 		return
 	}
 
 	// 如果不使用数据库，尝试从内存中删除（内部MCP服务器）
 	// 注意：内存中的记录可能已经被清理，所以这里只记录日志
 	h.logger.Info("尝试删除内存中的执行记录", zap.String("executionId", id))
-	c.JSON(http.StatusOK, gin.H{"message": "执行记录已删除（如果存在）"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T("monitor.message.deleted_if_exists")})
 }
 
 // DeleteExecutions 批量删除执行记录
@@ -319,7 +320,7 @@ func (h *MonitorHandler) DeleteExecutions(c *gin.Context) {
 	}
 
 	if len(request.IDs) == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "执行记录ID列表不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("monitor.error.ids_empty")})
 		return
 	}
 
@@ -372,14 +373,14 @@ func (h *MonitorHandler) DeleteExecutions(c *gin.Context) {
 		}
 
 		h.logger.Info("批量删除执行记录成功", zap.Int("count", len(request.IDs)))
-		c.JSON(http.StatusOK, gin.H{"message": "成功删除执行记录", "deleted": len(executions)})
+		c.JSON(http.StatusOK, gin.H{"message": i18n.T("monitor.message.batch_deleted"), "deleted": len(executions)})
 		return
 	}
 
 	// 如果不使用数据库，尝试从内存中删除（内部MCP服务器）
 	// 注意：内存中的记录可能已经被清理，所以这里只记录日志
 	h.logger.Info("尝试批量删除内存中的执行记录", zap.Int("count", len(request.IDs)))
-	c.JSON(http.StatusOK, gin.H{"message": "执行记录已删除（如果存在）"})
+	c.JSON(http.StatusOK, gin.H{"message": i18n.T("monitor.message.deleted_if_exists")})
 }
 
 

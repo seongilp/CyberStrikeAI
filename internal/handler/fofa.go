@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"cyberstrike-ai/internal/config"
+	"cyberstrike-ai/internal/i18n"
 	openaiClient "cyberstrike-ai/internal/openai"
 
 	"github.com/gin-gonic/gin"
@@ -116,23 +117,23 @@ func (h *FofaHandler) ParseNaturalLanguage(c *gin.Context) {
 	}
 	req.Text = strings.TrimSpace(req.Text)
 	if req.Text == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "text 不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("fofa.error.text_empty")})
 		return
 	}
 
 	if h.cfg == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "系统配置未初始化"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T("fofa.error.config_not_init")})
 		return
 	}
 	if strings.TrimSpace(h.cfg.OpenAI.APIKey) == "" || strings.TrimSpace(h.cfg.OpenAI.Model) == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "未配置 AI 模型：请在系统设置中填写 openai.api_key 与 openai.model（支持 OpenAI 兼容 API，如 DeepSeek）",
+			"error": i18n.T("fofa.error.ai_not_configured"),
 			"need":  []string{"openai.api_key", "openai.model"},
 		})
 		return
 	}
 	if h.openAIClient == nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "AI 客户端未初始化"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": i18n.T("fofa.error.ai_client_not_init")})
 		return
 	}
 
@@ -288,14 +289,14 @@ func (h *FofaHandler) ParseNaturalLanguage(c *gin.Context) {
 		var apiErr *openaiClient.APIError
 		if errors.As(err, &apiErr) {
 			h.logger.Warn("FOFA自然语言解析：LLM返回错误", zap.Int("status", apiErr.StatusCode))
-			c.JSON(http.StatusBadGateway, gin.H{"error": "AI 解析失败（上游返回非 200），请检查模型配置或稍后重试"})
+			c.JSON(http.StatusBadGateway, gin.H{"error": i18n.T("fofa.error.ai_parse_failed")})
 			return
 		}
 		c.JSON(http.StatusBadGateway, gin.H{"error": "AI 解析失败: " + err.Error()})
 		return
 	}
 	if len(apiResponse.Choices) == 0 {
-		c.JSON(http.StatusBadGateway, gin.H{"error": "AI 未返回有效结果"})
+		c.JSON(http.StatusBadGateway, gin.H{"error": i18n.T("fofa.error.ai_no_result")})
 		return
 	}
 
@@ -314,7 +315,7 @@ func (h *FofaHandler) ParseNaturalLanguage(c *gin.Context) {
 			snippet = snippet[:1200]
 		}
 		c.JSON(http.StatusBadGateway, gin.H{
-			"error":   "AI 返回内容无法解析为 JSON，请稍后重试或换个描述方式",
+			"error":   i18n.T("fofa.error.ai_json_parse_failed"),
 			"snippet": snippet,
 		})
 		return
@@ -340,7 +341,7 @@ func (h *FofaHandler) Search(c *gin.Context) {
 
 	req.Query = strings.TrimSpace(req.Query)
 	if req.Query == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "query 不能为空"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": i18n.T("fofa.error.query_empty")})
 		return
 	}
 	if req.Size <= 0 {
@@ -360,7 +361,7 @@ func (h *FofaHandler) Search(c *gin.Context) {
 	email, apiKey := h.resolveCredentials()
 	if email == "" || apiKey == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error":   "FOFA 未配置：请在系统设置中填写 FOFA Email/API Key，或设置环境变量 FOFA_EMAIL/FOFA_API_KEY",
+			"error":   i18n.T("fofa.error.fofa_not_configured"),
 			"need":    []string{"fofa.email", "fofa.api_key"},
 			"env_key": []string{"FOFA_EMAIL", "FOFA_API_KEY"},
 		})
@@ -405,7 +406,7 @@ func (h *FofaHandler) Search(c *gin.Context) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		c.JSON(http.StatusBadGateway, gin.H{"error": fmt.Sprintf("FOFA 返回非 2xx: %d", resp.StatusCode)})
+		c.JSON(http.StatusBadGateway, gin.H{"error": i18n.T("fofa.error.fofa_non_2xx", resp.StatusCode)})
 		return
 	}
 

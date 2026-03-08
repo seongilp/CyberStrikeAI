@@ -1,6 +1,13 @@
 // 页面路由管理
 let currentPage = 'dashboard';
 
+// i18n helper - reads from window.I18N injected by Go template
+function t(key, ...args) {
+    let msg = (window.I18N && window.I18N[key]) || key;
+    args.forEach((arg, i) => { msg = msg.replace('{' + i + '}', arg); });
+    return msg;
+}
+
 // 初始化路由
 function initRouter() {
     // 从URL hash读取页面（如果有）

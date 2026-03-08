@@ -9,28 +9,28 @@ import (
 )
 
 func main() {
-	var configPath = flag.String("config", "config.yaml", "配置文件路径")
+	var configPath = flag.String("config", "config.yaml", "설정 파일 경로")
 	flag.Parse()
 
-	// 加载配置
+	// 설정 로드
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		fmt.Printf("加载配置失败: %v\n", err)
+		fmt.Printf("설정 로드 실패: %v\n", err)
 		return
 	}
 
-	// 初始化日志
+	// 로그 초기화
 	log := logger.New(cfg.Log.Level, cfg.Log.Output)
 
-	// 创建应用
+	// 애플리케이션 생성
 	application, err := app.New(cfg, log)
 	if err != nil {
-		log.Fatal("应用初始化失败", "error", err)
+		log.Fatal("애플리케이션 초기화 실패", "error", err)
 	}
 
-	// 启动服务器
+	// 서버 시작
 	if err := application.Run(); err != nil {
-		log.Fatal("服务器启动失败", "error", err)
+		log.Fatal("서버 시작 실패", "error", err)
 	}
 }
 
